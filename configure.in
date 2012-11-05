@@ -6,12 +6,6 @@ AC_INIT([libAMPI], [0.2], [schanen@stce.rwth-aachen.de])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror])
-#AC_PROG_CC_C89
-## Compilers and MPI
-#AC_PROG_CC
-#AC_PROG_CXX
-#AC_LANG([C])
-#AC_LANG([C++])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -24,24 +18,15 @@ AC_HEADER_STDC
 
 AC_CHECK_LIB([m], [sqrt],,AC_MSG_ERROR(Could not find -lm libary.))
 AC_LANG([C])
-LX_FIND_MPI()
 AC_LANG([C++])
-LX_FIND_MPI()
-CC=$MPICC
-CXX=$MPICXX
-#ACX_MPI([CC="$MPICC"], [AC_MSG_ERROR([Could not find MPI.])])
-#ACX_MPI([CC="mpicc"], )
-#AC_LANG([C++])
-#ACX_MPI([CXX="$MPICXX"], [AC_MSG_ERROR([Could not find MPI.])])
-#ACX_MPI([CXX="mpicxx"], ])
 
-# Checks for libraries.
-# FIXME: Replace `main' with a function in `-lAMPI':
-#AC_CHECK_LIB([AMPI], [main],,AC_MSG_ERROR(Could not find AMPI library))
-# FIXME: Replace `main' with a function in `-lm':
-
-# Checks for header files.
-#AC_CHECK_HEADERS([stdint.h],,AC_MSG_ERROR(Could not find stdint.h header file.))
+#if test "X${MPI_ENABLED}" = "Xyes"; then
+    echo ""
+    echo "MPI-C Settings"
+    echo "--------------"
+    echo ""
+    AMPI_SET_MPICC
+#fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -55,4 +40,14 @@ AC_CHECK_FUNCS([floor memset pow sqrt])
 
 AC_CONFIG_FILES([Makefile
 		 src/Makefile])
+AC_SUBST(MPICC)
+AC_SUBST(MPI_INC_DIR)
+AC_SUBST(MPI_LIB_DIR)
+AC_SUBST(MPI_LIBS)
+AC_SUBST(MPI_FLAGS)
+
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+
 AC_OUTPUT
+AMPI_REPORT

@@ -1,4 +1,4 @@
-
+CC=@MPICC@
 AM_CXXFLAGS = -Wall -I$(top_srcdir)/include $(OPENMP_CXXFLAGS)
 AM_CFLAGS = -Wall -Wno-unknown-pragmas -std=c89 -I$(top_srcdir)/include $(OPENMP_CFLAGS)
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
