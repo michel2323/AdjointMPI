@@ -6,6 +6,9 @@ AC_INIT([libAMPI], [0.2], [schanen@stce.rwth-aachen.de])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror])
+#m4_pattern_allow([AM_PROG_AR])
+#AM_PROG_AR
+#AM_PROG_AR([act-if-fail])
 
 # Checks for programs.
 AC_PROG_CXX
