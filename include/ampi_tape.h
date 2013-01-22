@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ampi.h>
+#include <uthash.h>
 
 /*int ampi_vac=0;*/
 
@@ -73,6 +74,11 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
 int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
 int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
+
+int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
+int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request);
+int AMPI_Start(MPI_Request *request);
+int AMPI_Startall(int count, MPI_Request array_of_requests[]);
 
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
 /* AMPI routines that have to be called by the external tape */

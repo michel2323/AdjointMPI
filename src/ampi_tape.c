@@ -562,6 +562,12 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 
 }
 
+int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request) {
+    return MPI_Recv_init(buf, count, datatype, source, tag, comm, request);
+}
+int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request) {
+    return MPI_Send_init(buf, count, datatype, dest, tag, comm, request);
+}
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status) {
     int i=0;
     double * tmp = malloc(sizeof(double)*count);
@@ -610,6 +616,14 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
     free(tmp);
     ampi_vac+=2*count+2;
     return temp;
+}
+
+int AMPI_Start(MPI_Request *request) {
+    return MPI_Start(request);
+}
+
+int AMPI_Startall(int count, MPI_Request array_of_requests[]) {
+    return MPI_Startall(count,array_of_requests);
 }
 
 void ampi_interpret_tape(){ 
