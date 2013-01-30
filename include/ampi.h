@@ -30,7 +30,7 @@
 
 /* AMPI request, replacing the MPI request */
 typedef struct AMPI_Request {
-    MPI_Request request;
+    MPI_Request *request;
     MPI_Status status;
     MPI_Comm comm;
 

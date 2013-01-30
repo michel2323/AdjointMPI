@@ -31,6 +31,10 @@
 #define GATHER 15
 #define SCATTERV 16
 #define GATHERV 17
+#define SEND_INIT 18
+#define RECV_INIT 19
+#define START 20
+#define STARTALL 21
 
 #include <stdlib.h>
 #include <assert.h>
@@ -38,6 +42,12 @@
 #include <uthash.h>
 
 /*int ampi_vac=0;*/
+
+typedef struct {
+    void *key;
+    AMPI_Request request;
+    UT_hash_handle hh; 
+} AMPI_ht_el;
 
 
 typedef struct ampi_tape_entry {
@@ -62,11 +72,12 @@ int AMPI_Finalize();
 int AMPI_Send(void*, int, MPI_Datatype, int, int, MPI_Comm);
 int AMPI_Recv(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Status*);
 
-int AMPI_Isend(void*, int, MPI_Datatype, int, int, MPI_Comm, AMPI_Request *);
-int AMPI_Irecv(void*, int, MPI_Datatype, int, int, MPI_Comm, AMPI_Request *);
+int AMPI_Isend(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Request *);
+int AMPI_Irecv(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Request *);
 
-int AMPI_Wait(AMPI_Request *, MPI_Status *);
-int AMPI_Waitall(int , AMPI_Request *, MPI_Status *);
+int AMPI_Wait(MPI_Request *, MPI_Status *);
+int AMPI_Waitall(int , MPI_Request *, MPI_Status *);
+int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status);
 int AMPI_Awaitall(int , AMPI_Request *, MPI_Status *);
 
 int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
