@@ -108,6 +108,7 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
     AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
     ht_el->key=mpi_request;
     request->buf = buf;
+    request->aw=0;
     request->request=mpi_request;
     double * tmp = malloc(sizeof(double)*count);
     ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*2);
@@ -157,6 +158,7 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
     AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
     ht_el->key=mpi_request;
     request->buf = buf;
+    request->aw=0;
     request->request=mpi_request;
     double * tmp = malloc(sizeof(double)*count);
     ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
@@ -625,6 +627,7 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
     ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
     ht_el->key=mpi_request;
     request->buf = buf;
+    request->aw=0;
     request->va=ampi_vac;
     ht_el->request=*request;
     ampi_tape[ampi_vac].oc = RECV_INIT;
@@ -643,6 +646,7 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
     ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
     ht_el->key=mpi_request;
     request->buf = buf;
+    request->aw=0;
     request->va=ampi_vac;
     ht_el->request=*request;
     ampi_tape[ampi_vac].oc = SEND_INIT;
@@ -709,6 +713,7 @@ int AMPI_Start(MPI_Request *mpi_request) {
     int ret=0;
     int va=0;
     AMPI_Request request;
+    request.aw=0;
     /*AMPI_Request *request=malloc(sizeof(AMPI_Request));*/
     void *addr=mpi_request;
     HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
