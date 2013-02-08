@@ -779,6 +779,7 @@ void ampi_interpret_tape(){
     i=ampi_vac;
 #ifdef DEBUG
     printf("AMPI_TAPE Interpreter OC: %d\n", ampi_tape[ampi_vac].oc);
+    printf("--------------------------------\n");
 #endif
     switch(ampi_tape[ampi_vac].oc){ 
 	case SEND : {
@@ -933,6 +934,7 @@ void ampi_interpret_tape(){
 #ifdef DEBUG
 			  printf("AMPI_Allreduce tmp_d_recv: ");
 			  for(j=0 ; j<ampi_tape[i].arg[0] ; j++) {
+			      /*if(tmp_d_recv[j]!=tmp_d_recv[j]) tmp_d_recv[j]=0;*/
 			      printf("%e ",tmp_d_recv[j]);
 			  }
 			  printf("\n");
@@ -941,7 +943,7 @@ void ampi_interpret_tape(){
 #ifdef DEBUG
 			  printf("AMPI_Allreduce tmp_d_send: ");
 			  for(j=0 ; j<ampi_tape[i].arg[0] ; j++) {
-			      /*tmp_d_send[j]=1.0;*/
+			      printf("%e ",tmp_d_send[j]);
 			  }
 			  printf("\n");
 #endif

@@ -458,7 +458,6 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 #ifdef DEBUG
-    printf("AMPI_Allreduce_b\n---------------\n");
     printf("AMPI_Allreduce_b count: %d\n",count);
     for(i=0 ; i<count ; i++) {
 	printf("AMPI_Allreduce_b recvbuf: %e\n", recvbuf[i]);
