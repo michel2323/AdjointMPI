@@ -258,10 +258,17 @@ int AMPI_Waitall(int count, MPI_Request *mpi_request, MPI_Status *status) {
     return 0;
 }
 int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status) {
-    if(count==1) {
-	return AMPI_Wait(&array_of_requests[0],status);
+    int i=0;
+    for(i=0;i<count;i=i+1) {
+	if(array_of_requests[i]!=MPI_REQUEST_NULL) {
+	    *index=i;
+	    return AMPI_Wait(&array_of_requests[i],status);
+	}
     }
-    else return -1;
+    /* if all requests are NULL we call MPI_Waitany to get the correct return
+     * values. No tracing is needed
+     */
+    return MPI_Waitany(count,array_of_requests,index,status);
     /*int i=0;*/
     /*int ret=0;*/
     /*AMPI_ht_el *ht_req=NULL;*/
