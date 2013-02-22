@@ -213,7 +213,6 @@ int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
     void *addr=mpi_request;
     HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
     if(ht_req) {
-	printf("Active Wait\n");
 	*request=ht_req->request;
 	double * tmp = (double*) request->v;
 	ampi_tape[ampi_vac].arg=malloc(sizeof(int));
@@ -245,7 +244,6 @@ int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
 	/*return MPI_Wait(mpi_request,status);*/
     }
     else {
-	printf("Passive Wait\n");
 	return MPI_Wait(mpi_request,status);
     }
 }
@@ -628,7 +626,6 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 }
 
 int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
-    printf("Recv_init\n");
     AMPI_Request *request=malloc(sizeof(AMPI_Request));
     AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
     ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
@@ -647,7 +644,6 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
     return 0;
 }
 int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
-    printf("Send_init\n");
     AMPI_Request *request=malloc(sizeof(AMPI_Request));
     AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
     ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
@@ -727,21 +723,16 @@ int AMPI_Start(MPI_Request *mpi_request) {
     if(ht_req) {
         request=ht_req->request;
 	va=request.va;
-	printf("Active Start\n");
 	if(ampi_tape[va].oc==SEND_INIT) {
-	    printf("Active Start Send_init\n");
 	    ret=AMPI_Isend(request.buf,ampi_tape[va].arg[0],MPI_DOUBLE,ampi_tape[va].arg[1],ampi_tape[va].tag,ampi_tape[va].comm,mpi_request);
 	    if(addr!=mpi_request) printf("changed\n");
             HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
-	    if(ht_req) printf("found!\n");
 	    return ret;
 	}
 	else if(ampi_tape[va].oc==RECV_INIT) {
-	    printf("Active Start Recv_init\n");
 	    ret=AMPI_Irecv(request.buf,ampi_tape[va].arg[0],MPI_DOUBLE,ampi_tape[va].arg[1],ampi_tape[va].tag,ampi_tape[va].comm,mpi_request);
 	    if(addr!=mpi_request) printf("changed\n");
             HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
-	    if(ht_req) printf("found!\n");
 	    return ret;
 	}
 	else {
@@ -757,7 +748,6 @@ int AMPI_Start(MPI_Request *mpi_request) {
 
 int AMPI_Startall(int count, MPI_Request array_of_requests[]) {
     int i=0;
-    printf("MPI_Startall with %d elements\n",count);
     for(i=0;i<count;i=i+1) AMPI_Start(&array_of_requests[i]);
     return 0;
 }
