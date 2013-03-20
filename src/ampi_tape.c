@@ -84,7 +84,10 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     ampi_tape[ampi_vac].arg[0] = count;
     ampi_tape[ampi_vac].arg[1] = dest;
     ampi_tape[ampi_vac].comm = comm;
-    ampi_tape[ampi_vac].tag = status->MPI_TAG;
+    if(status==MPI_STATUS_IGNORE)
+      ampi_tape[ampi_vac].tag = tag;
+    else
+      ampi_tape[ampi_vac].tag = status->MPI_TAG;
 
 #pragma omp parallel for
     for(i=0;i<count;i=i+1) {
@@ -226,7 +229,10 @@ int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
 	ampi_tape[ampi_vac].oc = WAIT;
 	ret=AMPI_Wait_f(request, status);
 	/*finally copy the request to the tape*/
-	request->tag=status->MPI_TAG;
+	if(status==MPI_STATUS_IGNORE)
+	  request->tag=ampi_tape[request->va].tag;
+	else
+	  request->tag=status->MPI_TAG;
 	*ampi_tape[request->va].request = *request;			
 	ampi_tape[ampi_vac].request = ampi_tape[request->va].request;
 	if(request->oc == AMPI_IR) {
@@ -291,37 +297,26 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
 
     double * tmp = malloc(sizeof(double)*count);
     int i=0;
-    /*create dummy of each element*/
-    /*#ifdef ASSERT*/
-    /*assert(ampi_vac<count-1);*/
-    /*#endif*/
-    /*int new_vac = ampi_vac+count;*/
-    /*ampi_create_dummies(buf, &count);*/
-    /*ampi_create_tape_entry(&new_vac);*/
+    ampi_check_tape_size(count+1);
 
     for(i = 0 ; i < count ; i=i+1) {
-	/*ampi_tape[ampi_vac+i].oc = MPI_DUMMY;*/
+	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(buf,&i,&tmp[i]);
-	/*ampi_tape[ampi_vac+i].arg[0] = -1;*/
-	/*ampi_tape[ampi_vac+i].arg[1] = -1;*/
 	ampi_get_idx(buf, &i, &ampi_tape[ampi_vac+i].idx);
-	/*tape[tape_entry::vac+i].v = buf[i].v;*/
-	/*tmp[i] = buf[i].v;*/
-	/*tape[tape_entry::vac+i].d = 0;*/
-	/*tape[tape_entry::vac+i].arg[0] = buf[i].va;*/
-	/*buf[i].va = tape_entry::vac+i;*/
     }
 
     /*create actual MPI entry*/
-
-    /*ampi_tape[ampi_vac+count].oc = BCAST;*/
-    /*ampi_tape[ampi_vac+count].arg[0] = count;*/
-    /*ampi_tape[ampi_vac+count].arg[1] = root;*/
-    /*ampi_tape[ampi_vac+count].comm = comm;*/
+    int new_vac = ampi_vac+count;
+    ampi_create_tape_entry(&new_vac);
+    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*2);
+    ampi_tape[ampi_vac+count].oc = BCAST;
+    ampi_tape[ampi_vac+count].arg[0] = count;
+    ampi_tape[ampi_vac+count].arg[1] = root;
+    ampi_tape[ampi_vac+count].comm = comm;
 
     int temp = AMPI_Bcast_f(tmp, count, datatype, root, comm);
 
-    /*ampi_vac+=count+1;*/
+    ampi_vac+=count+1;
     free(tmp);
     return temp;
 }
