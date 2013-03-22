@@ -255,16 +255,20 @@ int AMPI_Bcast_f(double *buf, int count, MPI_Datatype datatype, int root, MPI_Co
     return MPI_Bcast(buf, count, datatype, root, comm);
 }
 
-int AMPI_Bcast_b(double *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
+int AMPI_Bcast_b(double *sbuf, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
     int ierr = -1;
-    int i = -1;
-    int tag = -1;
-    MPI_Status status;
-    if(*AMPI_myid != root) {
-	ierr = MPI_Send(buf, count, datatype, root, tag, comm);
+    int i=0;
+    int rank=0;
+    MPI_Comm_rank(comm,&rank);
+    double *rbuf=malloc(sizeof(double)*count);
+    ierr=MPI_Reduce(sbuf,rbuf,count,datatype,MPI_SUM,root, comm);
+    if(rank != root) {
+	free(rbuf);
     }
     else {
-	ierr =  MPI_Recv(buf, count, datatype, i, tag, comm, &status); 
+	for(i=0;i<count;i++) sbuf[i]=rbuf[i];
+	free(rbuf);
+	
     }
     return ierr;
 }

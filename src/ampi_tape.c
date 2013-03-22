@@ -84,8 +84,9 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     ampi_tape[ampi_vac].arg[0] = count;
     ampi_tape[ampi_vac].arg[1] = dest;
     ampi_tape[ampi_vac].comm = comm;
-    if(status==MPI_STATUS_IGNORE)
+    if(status==MPI_STATUS_IGNORE) {
       ampi_tape[ampi_vac].tag = tag;
+    }
     else
       ampi_tape[ampi_vac].tag = status->MPI_TAG;
 
@@ -298,11 +299,15 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
     double * tmp = malloc(sizeof(double)*count);
     int i=0;
     ampi_check_tape_size(count+1);
+    int rank=0;
+    MPI_Comm_rank(comm,&rank);
 
-    for(i = 0 ; i < count ; i=i+1) {
-	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
-	ampi_get_val(buf,&i,&tmp[i]);
-	ampi_get_idx(buf, &i, &ampi_tape[ampi_vac+i].idx);
+    if(rank==root) {
+	for(i = 0 ; i < count ; i=i+1) {
+	    ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
+	    ampi_get_val(buf,&i,&tmp[i]);
+	    ampi_get_idx(buf, &i, &ampi_tape[ampi_vac+i].idx);
+	}
     }
 
     /*create actual MPI entry*/
@@ -315,6 +320,15 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
     ampi_tape[ampi_vac+count].comm = comm;
 
     int temp = AMPI_Bcast_f(tmp, count, datatype, root, comm);
+
+    if(rank!=root) {
+	ampi_create_dummies(buf, &count);
+	for(i = 0 ; i < count ; i=i+1) {
+	    ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
+	    ampi_get_idx(buf, &i, &ampi_tape[ampi_vac+i].idx);
+	    ampi_set_val(buf, &i, &tmp[i]);
+	}
+    }
 
     ampi_vac+=count+1;
     free(tmp);
@@ -861,18 +875,21 @@ void ampi_interpret_tape(){
 #ifdef NO_COMM_WORLD
 			comm=ampi_tape[i].comm;
 #endif
-			 tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
-			 AMPI_Bcast_b(tmp_d, ampi_tape[i].arg[0], MPI_DOUBLE, ampi_tape[i].arg[1], comm);
-			 /*if(*AMPI_myid == ampi_tape[i].arg[1]) { */
-			 /**//*for(int j = 0 ; j < ampi_tape[i].arg[0] ; j++) {*/
-			 /**//*ampi_tape[i-ampi_tape[i].arg[0]+j].d += tmp_d[j];*/
-			 /**//*}*/
-			 /*for(j=0 ; j<ampi_tape[i].arg[0] ; j++) {*/
-			 /*ampi_set_adj(&ampi_tape[i-ampi_tape[i].arg[0]+j].idx,&tmp_d[j]);*/
-			 /*}*/
-			 /*}*/
-			 free(tmp_d);
-			 break;
+			int rank=0;
+			MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+			tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			for(j=0 ; j<ampi_tape[i].arg[0] ; j++) {
+			    ampi_get_adj(&ampi_tape[i-ampi_tape[i].arg[0]+j].idx,&tmp_d[j]);
+			}
+			
+			AMPI_Bcast_b(tmp_d, ampi_tape[i].arg[0], MPI_DOUBLE, ampi_tape[i].arg[1], comm);
+			if(rank == ampi_tape[i].arg[1]) { 
+			    for(j=0 ; j<ampi_tape[i].arg[0] ; j++) {
+				ampi_set_adj(&ampi_tape[i-ampi_tape[i].arg[0]+j].idx,&tmp_d[j]);
+			    }
+			}
+			free(tmp_d);
+			break;
 		     }
 	case REDUCE : {
 			  if(ampi_tape[i].arg[2] == REDUCE_ADD)
@@ -887,6 +904,7 @@ void ampi_interpret_tape(){
 			  tmp_d_recv = malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			  for(j=0;j<ampi_tape[i].arg[0];j=j+1)
 				ampi_get_adj(&ampi_tape[i+1+j].idx, &tmp_d_recv[j]);
+			  for(j=0;j<ampi_tape[i].arg[0];j=j+1) tmp_d_send[i]=0;
 
 #ifdef NO_COMM_WORLD
 			comm=ampi_tape[i].comm;
