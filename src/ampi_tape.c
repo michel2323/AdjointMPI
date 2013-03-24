@@ -152,6 +152,7 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
     ampi_vac+=count+1;
     ht_el->request=*request;
     HASH_ADD_PTR(AMPI_ht,key,ht_el);
+    free(request);
     return temp;
 }
 
@@ -824,12 +825,9 @@ void ampi_interpret_tape(){
 			 for(j = 0 ; j < ampi_tape[i].arg[0] ; j++) {
 			     tmp_entry=&ampi_tape[i-ampi_tape[i].arg[0]+j];
 			     ampi_set_adj(&tmp_entry->idx, &tmp_d[j]);
-			     /*ampi_set_adj(&ampi_tape[i-j-1].idx, &tmp_d[j]);*/
-			     /*}*/
 		     }
-		     /*else {*/
-		     /*}*/
-			 free(tmp_d);
+		     /*free(tmp_d);*/
+			 free(ampi_tape[i].request->request);
 			 break;
 		     }
 	case IRECV : {
@@ -845,6 +843,7 @@ void ampi_interpret_tape(){
 			     AMPI_Irecv_b(tmp_d, ampi_tape[i].arg[0], MPI_DOUBLE, ampi_tape[i].arg[1], ampi_tape[i].tag, comm,ampi_tape[i].request);
 			     /*}*/
 			 free(tmp_d);
+			 free(ampi_tape[i].request->request);
 			 break;
 		     }
 	case WAIT : {
@@ -864,6 +863,7 @@ void ampi_interpret_tape(){
 #endif
 			}
 			ampi_tape[i].request->a = tmp_d;
+			ampi_tape[i].request->request=malloc(sizeof(MPI_Request));
 #ifndef NO_COMM_WORLD 
 			ampi_tape[i].request->comm=MPI_COMM_WORLD;
 #endif

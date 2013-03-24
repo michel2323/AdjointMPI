@@ -89,7 +89,9 @@ int AMPI_Send_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag
 }
 
 int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status) {
-    return MPI_Send(buf, count, datatype, dest, tag, comm);
+    int ierr=0;
+    ierr=MPI_Send(buf, count, datatype, dest, tag, comm);
+    return ierr;
 }
 
 /* Non blocking communication */
@@ -125,20 +127,21 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 }
 
 int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
-    return MPI_Wait(request->request, status);
+    int ierr=0;
+    ierr=MPI_Wait(request->request, status);
+    return ierr;
 }
 
 int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     int i = 0;
     if(!request->aw) {
-    	MPI_Wait(request->request, &request->status);
+	MPI_Wait(request->request, &request->status);
 	for(i = 0 ; i < request->size ; i++) {
 	    buf[i] = request->a[i];
 	}
 #ifdef DEBUG
 	printf("AMPI_Isend_b: ");
 	for(i = 0 ; i < request->size ; i++) {
-	    /*buf[i]=1.0;*/
 	    printf("%f ", buf[i]);
 	}
 	printf("\n");
@@ -181,7 +184,6 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 #ifdef DEBUG
 	    printf("AMPI_Wait_recv: ");
 	    for(i=0;i<request->size;i=i+1) {
-		/*request->a[i]=33.0;*/
 		printf("%f ",request->a[i]);
 	    }
 	    printf("\n");
