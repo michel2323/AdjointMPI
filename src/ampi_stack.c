@@ -9,8 +9,8 @@ void push(ampi_stack *s, double val) {
 }
 
 double pop(ampi_stack *s) {
-    if(empty(s))
-	shrink(s);
+    /*if(empty(s))*/
+    /*shrink(s);*/
     (s->top)=(s->top)-1;
     /*printf("size: %d, top: %d, val: %f\n", s->size, s->top, s->v[s->top]);*/
     return (s->v[s->top]);

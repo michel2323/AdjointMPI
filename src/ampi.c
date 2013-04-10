@@ -604,3 +604,10 @@ int AMPI_Scatter_b(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recv
     return MPI_Gather(recvbuf, recvcnt, recvtype, sendbuf, sendcnt, sendtype, root, comm);
 }
 
+int AMPI_get_stack_counter() {
+    return reduce_stack.top;
+}
+
+void AMPI_set_stack_counter(int counter) {
+   reduce_stack.top=counter;
+}

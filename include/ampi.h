@@ -109,4 +109,7 @@ int AMPI_Sendrecv_replace_b(double *buf, int count, MPI_Datatype datatype, int d
 int AMPI_Reduc_Tupel();
 void AMPI_Tupel_Max(void *invec_in, void *outvec_in, int *len, MPI_Datatype *datatype);
 void AMPI_Tupel_Min(void *invec_in, void *outvec_in, int *len, MPI_Datatype *datatype);
+
+int AMPI_get_stack_counter();
+void AMPI_set_stack_counter(int counter);
 #endif
