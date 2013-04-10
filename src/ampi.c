@@ -246,32 +246,42 @@ int AMPI_Awaitall_b(int count, AMPI_Request *requests) {
 /* Collective Communication */
 
 int AMPI_Bcast_f(double *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm) {
+    int ierr=0;
 #ifdef DEBUG
-    int i=0;
     printf("AMPI_Bcast_f before: ");
     for(i = 0 ; i < count ; i++) {
 	printf("%f ", buf[i]);
     }
     printf("\n");
 #endif
-    return MPI_Bcast(buf, count, datatype, root, comm);
+    ierr=MPI_Bcast(buf, count, datatype, root, comm);
+    return ierr;
 }
 
-int AMPI_Bcast_b(double *sbuf, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
-    int ierr = -1;
+int AMPI_Bcast_b(double *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm){
+    int ierr=0;
     int i=0;
     int rank=0;
     MPI_Comm_rank(comm,&rank);
-    double *rbuf=malloc(sizeof(double)*count);
-    ierr=MPI_Reduce(sbuf,rbuf,count,datatype,MPI_SUM,root, comm);
-    if(rank != root) {
-	free(rbuf);
+
+    double *sendbuf=malloc(sizeof(double)*count);
+    double *recvbuf=malloc(sizeof(double)*count);
+    if(rank!=root) {
+      for(i=0;i<count;i=i+1) sendbuf[i]=buf[i];
+      for(i=0;i<count;i=i+1) recvbuf[i]=0;
     }
     else {
-	for(i=0;i<count;i++) sbuf[i]=rbuf[i];
-	free(rbuf);
-	
+      for(i=0;i<count;i=i+1) {
+	sendbuf[i]=0;
+      }
+      for(i=0;i<count;i=i+1) recvbuf[i]=0;
     }
+    ierr=MPI_Reduce(sendbuf,recvbuf,1,MPI_DOUBLE,MPI_SUM,root,comm);
+    if(rank==root) {
+      for(i=0;i<count;i=i+1) buf[i]=recvbuf[i];
+    }
+    free(sendbuf);
+    free(recvbuf);
     return ierr;
 }
 
