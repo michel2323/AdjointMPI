@@ -12,26 +12,20 @@ MODULE ampi_fortran_interface
 
   PRIVATE
   
-  !PUBLIC  :: MPI_COMM_WORLD, MPI_ANY_TAG, MPI_DOUBLE_PRECISION
   PUBLIC   ::    AMPI_SUM, AMPI_PROD, AMPI_MIN, AMPI_MAX
 
-  PUBLIC  :: AMPI_INIT, AMPI_FINALIZE, AMPI_COMM_RANK,          &
-       &     AMPI_COMM_SIZE,                                    &
-       &     AMPI_SEND, AMPI_RECV, AMPI_ISEND, AMPI_IRECV,      &
-       &     AMPI_REDUCE,                                       &
-       &     AMPI_ALLREDUCE,                                    &
-       &     AMPI_WAIT,                                         &
-       &     AMPI_WAITALL,                                      &
+  PUBLIC  :: AMPI_INIT_C, AMPI_FINALIZE_C,           &
+       &     AMPI_SEND_C, AMPI_RECV_C, AMPI_ISEND_C, AMPI_IRECV_C,      &
+       &     AMPI_REDUCE_C,                                       &
+       &     AMPI_ALLREDUCE_C,                                    &
+       &     AMPI_WAIT_C,                                         &
+       &     AMPI_WAITALL_C,                                      &
        &     AMPI_INTERPRET_TAPE, AMPI_PRINT_TAPE_ENTRY,        &
        &     AMPI_RESET_TAPE
-   
 
 
   !AMPI constants
 
-  !INTEGER, PARAMETER                          :: MPI_COMM_WORLD = 0 
-  !INTEGER, PARAMETER                          :: MPI_ANY_TAG = 0 
-  !INTEGER, PARAMETER                          :: MPI_DOUBLE_PRECISION = 0 
   INTEGER, PARAMETER                          :: AMPI_SUM  = 1 
   INTEGER, PARAMETER                          :: AMPI_PROD = 2 
   INTEGER, PARAMETER                          :: AMPI_MIN  = 3 
@@ -46,31 +40,31 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)              :: ierr
      END SUBROUTINE AMPI_RESET_TAPE
 
-     SUBROUTINE AMPI_INIT (ierr) BIND(c,name='ampi_init_fort')
+     SUBROUTINE AMPI_INIT_C (ierr) BIND(c,name='ampi_init_fort')
        USE iso_c_binding
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_INIT
+     END SUBROUTINE AMPI_INIT_C
 
-     SUBROUTINE AMPI_FINALIZE (ierr) BIND(c,name='ampi_finalize_fort')
+     SUBROUTINE AMPI_FINALIZE_C (ierr) BIND(c,name='ampi_finalize_fort')
        USE iso_c_binding
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_FINALIZE
+     END SUBROUTINE AMPI_FINALIZE_C
 
-     SUBROUTINE AMPI_COMM_RANK (comm,myid,ierr) BIND(c,name='ampi_comm_rank_fort')
-       USE iso_c_binding
-       INTEGER(c_int)              :: comm
-       INTEGER(c_int)              :: myid
-       INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_COMM_RANK
+     !SUBROUTINE AMPI_COMM_RANK_C (comm,myid,ierr) BIND(c,name='ampi_comm_rank_fort')
+       !USE iso_c_binding
+       !INTEGER(c_int)              :: comm
+       !INTEGER(c_int)              :: myid
+       !INTEGER(c_int)              :: ierr
+     !END SUBROUTINE AMPI_COMM_RANK_C
 
-     SUBROUTINE AMPI_COMM_SIZE (comm,size,ierr) BIND(c,name='ampi_comm_size_fort')
-       USE iso_c_binding
-       INTEGER(c_int)              :: comm
-       INTEGER(c_int)              :: size
-       INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_COMM_SIZE
+     !SUBROUTINE AMPI_COMM_SIZE_C (comm,size,ierr) BIND(c,name='ampi_comm_size_fort')
+       !USE iso_c_binding
+       !INTEGER(c_int)              :: comm
+       !INTEGER(c_int)              :: size
+       !INTEGER(c_int)              :: ierr
+     !END SUBROUTINE AMPI_COMM_SIZE_C
 
-     SUBROUTINE AMPI_SEND (buf, count, datatype, dest, tag, & 
+     SUBROUTINE AMPI_SEND_C (buf, count, datatype, dest, tag, & 
           comm, ierr) BIND(c,name='ampi_send_fort')
        USE iso_c_binding
        USE compad_module_adj_tape_common             
@@ -81,9 +75,9 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)                   :: tag
        INTEGER(c_int)                   :: comm
        INTEGER(c_int)                   :: ierr
-     END SUBROUTINE AMPI_SEND
+     END SUBROUTINE AMPI_SEND_C
 
-     SUBROUTINE AMPI_RECV (buf, count, datatype, dest, tag, & 
+     SUBROUTINE AMPI_RECV_C (buf, count, datatype, dest, tag, & 
           comm, status, ierr) BIND(c,name='ampi_recv_fort')
        USE, INTRINSIC              :: iso_c_binding
        USE compad_module_adj_tape_common             
@@ -95,9 +89,9 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)                   :: comm
        INTEGER(c_int),DIMENSION(*)      :: status
        INTEGER(c_int)                   :: ierr
-     END SUBROUTINE AMPI_RECV
+     END SUBROUTINE AMPI_RECV_C
 
-     SUBROUTINE AMPI_ISEND (buf, count, datatype, dest, tag, & 
+     SUBROUTINE AMPI_ISEND_C (buf, count, datatype, dest, tag, & 
           comm, request, ierr) BIND(c,name='ampi_isend_fort')
        USE iso_c_binding
        USE compad_module_adj_tape_common             
@@ -109,11 +103,11 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)                   :: comm
        INTEGER(c_int)              :: request
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_ISEND
+     END SUBROUTINE AMPI_ISEND_C
 
-     SUBROUTINE AMPI_IRECV (buf, count, datatype, dest, tag, & 
+     SUBROUTINE AMPI_IRECV_C (buf, count, datatype, dest, tag, & 
           comm, request, ierr) BIND(c,name='ampi_irecv_fort')
-       USE, INTRINSIC              :: iso_c_binding
+       USE iso_c_binding
        USE compad_module_adj_tape_common             
        TYPE(COMPAD_TYPE),DIMENSION(*)   :: buf
        INTEGER(c_int)                   :: count
@@ -123,26 +117,26 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)                   :: comm
        INTEGER(c_int)              :: request
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_IRECV
+     END SUBROUTINE AMPI_IRECV_C
 
-     SUBROUTINE AMPI_WAIT (request, status, ierr) & 
+     SUBROUTINE AMPI_WAIT_C (request, status, ierr) & 
           BIND(c,name='ampi_wait_fort')
        USE, INTRINSIC              :: iso_c_binding
        INTEGER(c_int)              :: request
        INTEGER(c_int), DIMENSION(*):: status
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_WAIT
+     END SUBROUTINE AMPI_WAIT_C
 
-     SUBROUTINE AMPI_WAITALL (count, request, status, ierr) & 
+     SUBROUTINE AMPI_WAITALL_C (count, request, status, ierr) & 
           BIND(c,name='ampi_waitall_fort')
        USE, INTRINSIC                  :: iso_c_binding
        INTEGER(c_int), DIMENSION(*)    :: request
        INTEGER(c_int), DIMENSION(*)  :: status
        INTEGER(c_int)                  :: ierr
        INTEGER(c_int)                  :: count
-     END SUBROUTINE AMPI_WAITALL
+     END SUBROUTINE AMPI_WAITALL_C
 
-     SUBROUTINE AMPI_REDUCE (sendbuf, recvbuf, count, datatype, & 
+     SUBROUTINE AMPI_REDUCE_C (sendbuf, recvbuf, count, datatype, & 
              op, root, comm, ierr) BIND(c,name='ampi_reduce_fort')
        USE, INTRINSIC              :: iso_c_binding
        USE compad_module_adj_tape_common             
@@ -155,9 +149,9 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)                   :: tag
        INTEGER(c_int)                   :: comm
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_REDUCE
+     END SUBROUTINE AMPI_REDUCE_C
 
-     SUBROUTINE AMPI_ALLREDUCE (sendbuf, recvbuf, count, datatype, & 
+     SUBROUTINE AMPI_ALLREDUCE_C (sendbuf, recvbuf, count, datatype, & 
              op, comm, ierr) BIND(c,name='ampi_allreduce_fort')
        USE, INTRINSIC              :: iso_c_binding
        USE compad_module_adj_tape_common             
@@ -169,7 +163,7 @@ MODULE ampi_fortran_interface
        INTEGER(c_int)                   :: tag
        INTEGER(c_int)                   :: comm
        INTEGER(c_int)              :: ierr
-     END SUBROUTINE AMPI_ALLREDUCE
+     END SUBROUTINE AMPI_ALLREDUCE_C
      !External AMPI tape interpretation routine called by the COMPAD tape
      !interpreter if an AMPI tape entry is interpreted.
 

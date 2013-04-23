@@ -10,6 +10,7 @@
 #include "ampi_fortran_stubs.h"
 
 
+int ampi_request_chunks=1;
 
 /* Active datatype of COMPAD. Needed to do cast from void* */
 
@@ -23,6 +24,7 @@ void ampi_reset_tape_fort(int * ierr){
 
 void ampi_init_fort(int *ierr) {
     crequest = 0;
+    request_idx=malloc(REQUEST_CHUNK_SIZE*sizeof(AMPI_Request));
     char *** argv = NULL;
     int * argc=NULL; 
     *ierr =  AMPI_Init(argc, argv);
@@ -55,12 +57,13 @@ void ampi_recv_fort(compad_type *buf, int *count, int *datatype, int *dest, int 
 }
 
 void ampi_isend_fort(compad_type *buf, int *count, int *datatype, int *dest, int *tag, int *comm, int *request, int *ierr) {
-#ifdef ASSERT
-    assert(crequest < REQUEST_IDX_SIZE);
-#endif
+    /*#ifdef ASSERT*/
+    /*assert(crequest < REQUEST_IDX_SIZE);*/
+    ampi_check_request_size();
+    /*#endif*/
     request_idx[crequest].v = buf;
     request_idx[crequest].dest= dest;
-    request_idx[crequest].oc = IS;
+    request_idx[crequest].oc = AMPI_IS;
     request_idx[crequest].size = count;
     request_idx[crequest].tag = tag;
     request_idx[crequest].comm = comm;
@@ -70,12 +73,13 @@ void ampi_isend_fort(compad_type *buf, int *count, int *datatype, int *dest, int
 }
 
 void ampi_irecv_fort(compad_type *buf, int *count, int *datatype, int *dest, int *tag, int *comm, int *request, int *ierr) {
-#ifdef ASSERT
-    assert(crequest < REQUEST_IDX_SIZE);
-#endif
+    /*#ifdef ASSERT*/
+    /*assert(crequest < REQUEST_IDX_SIZE);*/
+    ampi_check_request_size();
+    /*#endif*/
     request_idx[crequest].v = buf;
     request_idx[crequest].dest= dest;
-    request_idx[crequest].oc = IR;
+    request_idx[crequest].oc = AMPI_IR;
     request_idx[crequest].size = count;
     request_idx[crequest].tag = tag;
     request_idx[crequest].comm = comm;
@@ -167,6 +171,20 @@ void ampi_create_tape_entry(int *i) {
 void ampi_create_dummies(void *buf, int *size) {
     compad_type *buf_compad = buf;
     ampi_create_dummies_fort(buf_compad, size);
+}
+
+void ampi_check_request_size() {
+    if(crequest>=REQUEST_CHUNK_SIZE) {
+	AMPI_Request *tmp;
+        tmp=realloc(request_idx,(ampi_request_chunks+1)*REQUEST_CHUNK_SIZE*sizeof(AMPI_Request));
+	if(tmp != NULL) {
+	    request_idx=tmp;
+	    ampi_request_chunks=ampi_request_chunks+1;
+	}
+	else {
+	    printf("AMPI Fortran request allocation error.\n");
+	}
+    }
 }
 
 /*void ampi_print_tape_entry_(int *i) {*/
