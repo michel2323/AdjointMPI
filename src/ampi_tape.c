@@ -535,43 +535,48 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
 }
 
 int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
-    int i=0;
-    int size=0;
-    MPI_Comm_size(comm,&size);
-    double * tmp_send = malloc(sizeof(double)*sendcnt);
-    double * tmp_recv = malloc(sizeof(double)*recvcnt*size);
-    ampi_tape[ampi_vac+sendcnt].arg=malloc(sizeof(int)*3);
-    ampi_tape[ampi_vac+sendcnt].comm = comm;
+  int i=0;
+  int size=0;
+  MPI_Comm_size(comm,&size);
+  double * tmp_send = malloc(sizeof(double)*sendcnt);
+  double * tmp_recv = malloc(sizeof(double)*recvcnt*size);
+  ampi_tape[ampi_vac+sendcnt].arg=malloc(sizeof(int)*3);
+  ampi_tape[ampi_vac+sendcnt].comm = comm;
+  ampi_check_tape_size(recvcnt*size+sendcnt+1);
+  int scount=recvcnt*size;
+  ampi_create_dummies(recvbuf, &scount);
 
-    /*sendbuf dummies*/
-
-#pragma omp parallel for
-    for(i=0 ; i<sendcnt ; i=i+1) {
-	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
-	ampi_get_val(sendbuf,&i,&tmp_send[i]);
-	ampi_get_idx(sendbuf, &i, &ampi_tape[ampi_vac+i].idx);
-    }
-    ampi_tape[ampi_vac+sendcnt].oc = GATHER;
-    ampi_tape[ampi_vac+sendcnt].arg[2] = sendcnt;
-    ampi_tape[ampi_vac+sendcnt].arg[1] = recvcnt;
-    ampi_tape[ampi_vac+sendcnt].arg[0] = root;
-    ampi_tape[ampi_vac+sendcnt].comm = comm;
-
-    AMPI_Gather_f(tmp_send, sendcnt, sendtype, tmp_recv, recvcnt, recvtype, root, comm);
-
-    /*recvbuf entry*/
+  /*sendbuf dummies*/
 
 #pragma omp parallel for
-    for(i=0 ; i<recvcnt*size ; i=i+1) {
-	ampi_tape[ampi_vac+sendcnt+1+i].oc = MPI_DUMMY;
-	ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+sendcnt+1+i].idx);
-	ampi_set_val(recvbuf, &i, &tmp_recv[i]);
-    }
+  for(i=0 ; i<sendcnt ; i=i+1) {
+    ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
+    ampi_get_val(sendbuf,&i,&tmp_send[i]);
+    ampi_get_idx(sendbuf, &i, &ampi_tape[ampi_vac+i].idx);
+  }
+  ampi_tape[ampi_vac+sendcnt].oc = GATHER;
+  ampi_tape[ampi_vac+sendcnt].arg[2] = sendcnt;
+  ampi_tape[ampi_vac+sendcnt].arg[1] = recvcnt;
+  ampi_tape[ampi_vac+sendcnt].arg[0] = root;
+  ampi_tape[ampi_vac+sendcnt].comm = comm;
+  int new_vac=ampi_vac+sendcnt;
+  ampi_create_tape_entry(&new_vac);
 
-    ampi_vac+=recvcnt*size+sendcnt+1;
-    free(tmp_send);
-    free(tmp_recv);
-    return 0;
+  AMPI_Gather_f(tmp_send, sendcnt, sendtype, tmp_recv, recvcnt, recvtype, root, comm);
+
+  /*recvbuf entry*/
+
+#pragma omp parallel for
+  for(i=0 ; i<recvcnt*size ; i=i+1) {
+    ampi_tape[ampi_vac+sendcnt+1+i].oc = MPI_DUMMY;
+    ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+sendcnt+1+i].idx);
+    ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+  }
+
+  ampi_vac+=recvcnt*size+sendcnt+1;
+  free(tmp_send);
+  free(tmp_recv);
+  return 0;
 
 }
 
@@ -971,14 +976,31 @@ void ampi_interpret_tape(){
 			 }
 			 free(sendbuf);
 			 free(recvbuf);
-
-
 			 break;
 		       }
 	case SCATTERV : {
 			   break;
 		       }
 	case GATHER : {
+#ifdef NO_COMM_WORLD
+			 comm=ampi_tape[i].comm;
+#endif
+			 int size=0;
+			 int root=ampi_tape[i].arg[0];
+			 int crecv=ampi_tape[i].arg[1];
+			 int csend=ampi_tape[i].arg[2];
+			 MPI_Comm_size(comm,&size);
+			 double *sendbuf=malloc(sizeof(double)*csend);
+			 double *recvbuf=malloc(sizeof(double)*crecv*size);
+			 for(j=0;j<crecv*size;j++) {
+			   ampi_get_adj(&ampi_tape[i+1+j].idx,&recvbuf[j]);
+			 }
+			 AMPI_Gather_b(sendbuf,csend,MPI_DOUBLE,recvbuf,crecv,MPI_DOUBLE,root,comm);
+			 for(j=0;j<csend;j++) {
+			   ampi_set_adj(&ampi_tape[i-csend+j].idx,&sendbuf[j]);
+			 }
+			 free(sendbuf);
+			 free(recvbuf);
 			   break;
 		       }
 	case GATHERV : {
