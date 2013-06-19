@@ -1,6 +1,6 @@
 CXX       = mpicxx
 CC       = mpicc
-CFLAGS   =  -O3
+CFLAGS   =  -g -O0
 #EXAMPLES = heat pi reduce awaitall mandelbrot speelpenning speelpenning_dcc
 EXAMPLES = heat_dco speelpenning_dco pi_dco mandelbrot_dco awaitall_dco reduce_dco speelpenning_dcc 
 AMPI_LIB_PATH = ../src

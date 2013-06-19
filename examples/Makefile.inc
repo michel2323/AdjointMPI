@@ -1,10 +1,10 @@
 CC=mpicc
 CXX=mpicxx
-CFLAGS=-g -O3 -fopenmp
-CXXFLAGS=-g -O3 -fopenmp
+CFLAGS=-g -O0 -fopenmp
+CXXFLAGS=-g -O0 -fopenmp
 
 AMPI_LIBDIR=../../src
 AMPI_INCLUDE=../../include
 
-DCO_LIBDIR=$(HOME)/hg/dco_external_functions/lib
-DCO_INCLUDE=$(HOME)/hg/dco_external_functions/include
+DCO_LIBDIR=$(HOME)/git/dco/build/dco_cpp/lib
+DCO_INCLUDE=$(HOME)/git/dco/build/dco_cpp/include

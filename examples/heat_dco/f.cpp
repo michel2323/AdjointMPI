@@ -41,11 +41,10 @@ void ts(int& nx,
     int mpi_j;
     int mpi_nx;
     active buf[4];
-    AMPI_Request request[4];
+    MPI_Request request[4];
     MPI_Status status[4];
     for(int i = 0 ; i < 4 ; i++) {
 	buf[i] = 0;
-	request[i].aw = 0;
     }
     mpi_j = (myid * (nx/numprocs))+1;
     mpi_nx = ((myid+1) * (nx/numprocs))+1;
@@ -225,7 +224,7 @@ void f(int& nx,
 	mpi_cost=mpi_cost+0.5*(temp[mpi_j]-temp_obs[mpi_j])*(temp[mpi_j]-temp_obs[mpi_j]);
 	mpi_j=mpi_j+1;
     }
-    AMPI_Reduce(&mpi_cost, &cost, 1, AMPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    AMPI_Reduce(&mpi_cost, &cost, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 }
 void sf(int& nx, 
 	int& nt, 

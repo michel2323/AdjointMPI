@@ -28,7 +28,8 @@ int main(int argc, char* argv[]) {
     AMPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Status status;
     MPI_Status status2;
-    dco::a1s::global_tape->reset();
+    //dco::a1s::global_tape->reset();
+    dco::a1s::global_tape=dco::a1s::tape::create(1e8);
     double time1,time2;
     time1 = MPI_Wtime();
     int nit=0;
@@ -63,7 +64,8 @@ int main(int argc, char* argv[]) {
     active b1_a=0, b1_b=0;
     active* b1_temp=new active[nx+1];
     active* b1_temp_obs=new active[nx+1];
-    double* b1_temp_aux= new double[nx-1];
+    //double* b1_temp_aux= new double[nx-1];
+    double* b1_temp_aux= new double[nx+1];
 
     for (int i=0;i<=nx;i++) b1_temp_obs[i]=0;
 
@@ -84,6 +86,7 @@ int main(int argc, char* argv[]) {
     do {
 	//reset_tape();
 	dco::a1s::global_tape->reset();
+	AMPI_Reset_Tape();
 	a = 2.0;
 	b = 0.0;
 	temp[0]=a;
