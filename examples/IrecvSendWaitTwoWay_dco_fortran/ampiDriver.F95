@@ -1,10 +1,12 @@
 SUBROUTINE HEAD( x, y )
 
+    USE DCO_A1S
+
     IMPLICIT NONE
 
     include 'mpif.h'
 
-    DOUBLE PRECISION  :: x,y,local
+    TYPE(DCO_A1S_TYPE)  :: x,y,local
     INTEGER                        :: rank, ier, request
 
     CALL MPI_COMM_RANK(MPI_COMM_WORLD, rank, ier)
@@ -26,20 +28,25 @@ SUBROUTINE HEAD( x, y )
 END SUBROUTINE HEAD
 
 
-PROGRAM DRIVER
+PROGRAM FDDRIVER
+
+  USE DCO_A1S
 
   IMPLICIT NONE
 
   include 'mpif.h'
 
-  DOUBLE PRECISION               :: x,y
+  TYPE(DCO_A1S_TYPE)             :: xv,x,y,xp,yp,h
   INTEGER                        :: rank, ier
 
   CALL MPI_INIT(ier)
   CALL MPI_COMM_RANK(MPI_COMM_WORLD, rank, ier)
 
+  h=1.0D-8
+
   IF(rank .EQ. 0) THEN
     x=3.5D0
+    xv=x
     CALL HEAD(x,y)
     PRINT *, 'Process 0 got number: ', y
   ENDIF
@@ -47,6 +54,14 @@ PROGRAM DRIVER
     CALL HEAD(x,y)
   ENDIF
 
+  IF(rank .EQ. 0) THEN
+    xp=xv+h
+    CALL HEAD(xp,yp)
+    PRINT *, 'Process 0 got fd value: ', (yp-y)/h
+  ENDIF
+  IF(rank .EQ. 1) THEN
+    CALL HEAD(xp,yp)
+  ENDIF
   CALL MPI_FINALIZE(ier)
 
-END PROGRAM DRIVER
+END PROGRAM FDDRIVER
