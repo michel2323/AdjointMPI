@@ -42,7 +42,7 @@ extern "C" {
   }
   void ampi_set_adj(INT64 *idx, double *x) {
     //if(*idx!=0) const_cast<double&>(dco::a1s::global_tape->_adjoint(*idx)) = *x;
-    if(*idx!=0) dco::a1s::global_tape->_adjoint(*idx) += *x;
+    if(*idx!=0) const_cast<double&>(dco::a1s::global_tape->_adjoint(*idx)) += *x;
     //    if(*idx) *(*idx)=*x;
     //std::cout << "set adj: " << *x << " idx=" << *idx << std::endl;
   }

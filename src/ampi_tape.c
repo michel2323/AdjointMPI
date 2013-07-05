@@ -903,7 +903,7 @@ void ampi_interpret_tape(){
 			  tmp_d_recv = malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			  for(j=0;j<ampi_tape[i].arg[0];j=j+1)
 				ampi_get_adj(&ampi_tape[i+1+j].idx, &tmp_d_recv[j]);
-			  for(j=0;j<ampi_tape[i].arg[0];j=j+1) tmp_d_send[i]=0;
+			  for(j=0;j<ampi_tape[i].arg[0];j=j+1) tmp_d_send[j]=0;
 
 #ifdef NO_COMM_WORLD
 			comm=ampi_tape[i].comm;
