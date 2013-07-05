@@ -8,8 +8,10 @@ endif
 
 FC=gfortran
 FFLAGS=-g -O0 
+CXXFLAGS=-g -O0 
 
 #DCO_BUILD=$(DCO_BASE_DIR)/build/dco_fortran
+
 
 DCOF_BASE_DIR=$(DCO_BASE_DIR)/build/dco_fortran/lib/${FC}
 DCOCPP_INCLUDE_DIR=$(DCO_BASE_DIR)/build/dco_cpp/include
@@ -44,7 +46,7 @@ ampisupport.o: ampisupport.cpp
 ampi_fortran_stubs.o: ampi_fortran_stubs.c
 	$(MPICXX) $(CXXFLAGS) -I$(DCOCPP_INCLUDE_DIR) -I$(AMPI_DIR)/include -c -o $@ $^
 
-ampiDriver: ampiDriver.o ampisupport.o ampi_fortran_stubs.o ampi_fortran_interface.o
+ampiDriver: ampisupport.o ampi_fortran_stubs.o ampi_fortran_interface.o ampiDriver.o 
 	#$(MPICXX) $(CXXFLAGS) -o $@ $^  $(DCOF_BASE_DIR)/libdcof.a -lstdc++ -lrt $(AMPI_DIR)/src/libAMPI.a
 	$(MPIF90) $(FFLAGS) -o $@ $^  $(DCOF_BASE_DIR)/libdcof.a -lmpi_cxx -lstdc++ -lrt $(AMPI_DIR)/src/libAMPI.a
 
