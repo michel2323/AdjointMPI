@@ -46,19 +46,20 @@ int main(int argc, char* argv[]) {
     // boundary condition
     active a=2, b=0;
     // initial condition
-    active* temp=new active[nx+1];
-    temp[0]=a;
-    for (int i=1;i<nx;i++) temp[i]=0;
-    temp[nx]=b;
     // observations
     active* temp_obs=new active[nx+1];
     temp_obs[0]=a;
    //  for (int i=1;i<nx;i++) temp_obs[i]=((1.*i)/nx-.5)*((1.*i)/nx-.5);
  //   for (int i=1;i<nx;i++) temp_obs[i]=2./i;
-    for(int i = 1; i < nx; i++) temp_obs[i] = 2.0 - (double) i / 100.0;
+    for(int i = 1; i < nx; i++) temp_obs[i] = a - (double) i*a/nx ;
     // for (int i=1;i<nx;i++) temp_obs[i]=nx-i;
     // for (int i=1;i<nx;i++) temp_obs[i]=1;
     temp_obs[nx]=b;
+
+    active* temp=new active[nx+1];
+    temp[0]=a;
+    for (int i=1;i<nx;i++) temp[i]=0;
+    temp[nx]=b;
 
     active b1_cost, b1_delta_t=0, b1_c=0;
     active b1_a=0, b1_b=0;
@@ -97,7 +98,8 @@ int main(int argc, char* argv[]) {
 	c=1e-3;
 	temp_obs[0]=a;
 	for (int i=1;i<nx;i++){ 
-	    temp_obs[i]=2.0 - (double) i / 100.0;
+	  //temp_obs[i]=2.0 - (double) i / 100.0;
+            temp_obs[i] = a - (double) i*a/nx ;
 	    assert(temp_obs[i] == temp_obs[i]);
 	}
 	temp_obs[nx]=b;
@@ -180,7 +182,7 @@ int main(int argc, char* argv[]) {
 	MPI_Bcast(&ng, 1, MPI_DOUBLE, 0, AMPI_COMM_WORLD );
 	//cout << "id: "<< myid <<" ng: " << ng << endl;
 	//cout << "id: "<< myid <<" eps: " << eps << endl;
-		if ((!(nit%1000)) && (myid == 0)) cout << "ng: " << ng << endl;
+		if ((!(nit%10)) && (myid == 0)) cout << "ng: " << ng << endl;
     } while (ng>eps);
     if(numprocs > 1){ 
 	if(myid != 0) {

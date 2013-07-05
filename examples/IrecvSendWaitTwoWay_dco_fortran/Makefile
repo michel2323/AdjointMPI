@@ -9,7 +9,7 @@ default: driver.out #fdDriver.out ampiDriver.out
 	cat $^
 
 driver.out: driver
-	mpirun -n 2 ./$< > $@
+	mpiexec -n 2 ./$< > $@
 
 driver: driver.F95
 	${MPIF90} $(FFLAGS) -o $@ $^

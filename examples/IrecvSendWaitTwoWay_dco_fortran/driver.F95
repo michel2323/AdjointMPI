@@ -1,19 +1,20 @@
 SUBROUTINE HEAD( x, y )
 
-    
     IMPLICIT NONE
 
     include 'mpif.h'
 
     DOUBLE PRECISION  :: x,y,local
-    INTEGER                        :: rank, ier
+    INTEGER                        :: rank, ier, request
 
     CALL MPI_COMM_RANK(MPI_COMM_WORLD, rank, ier)
 
     IF(rank .EQ. 0) THEN
       x=x*2
-      CALL MPI_SEND(x, 1, MPI_DOUBLE_PRECISION, 1, 0, MPI_COMM_WORLD)
+      !CALL MPI_IRECV(y, 1, MPI_DOUBLE_PRECISION, 1, 0, MPI_COMM_WORLD, request, ier)
       CALL MPI_RECV(y, 1, MPI_DOUBLE_PRECISION, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ier)
+      CALL MPI_SEND(x, 1, MPI_DOUBLE_PRECISION, 1, 0, MPI_COMM_WORLD,ier)
+      !CALL MPI_WAIT(MPI_COMM_WORLD, request, ier)
       y=y*3
       PRINT *, 'y: ', y
     ENDIF
@@ -29,7 +30,6 @@ END SUBROUTINE HEAD
 
 
 PROGRAM DRIVER
-
 
   IMPLICIT NONE
 

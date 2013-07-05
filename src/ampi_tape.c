@@ -16,7 +16,8 @@ int ampi_chunks=1;
 
 int AMPI_Reset_Tape() {
     ampi_vac=0;
-    printf("AMPI tape has been reset.\n");
+    /* output is deprecated */
+    /*printf("AMPI tape has been reset.\n");*/
     return 0;
 }
 

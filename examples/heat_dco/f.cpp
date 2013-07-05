@@ -191,7 +191,7 @@ void af(int& nx,
     j=1;
     cost=0;
     while (j<nx) {
-	cost=cost+0.5*(temp[j]-temp_obs[j])*(temp[j]-temp_obs[j]);
+	cost=cost+0.5*(temp[j]-temp_obs[j])*(temp[j]-temp_obs[j])/nx;
 	j=j+1;
     }
 }
