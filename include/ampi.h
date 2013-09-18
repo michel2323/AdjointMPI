@@ -18,7 +18,7 @@
 #define AMPI_Status MPI_Status
 #define AMPI_DOUBLE MPI_DOUBLE
 /*#define INT64 double**/
-#define INT64 int
+#define INT64 long int
 
 /* Reduce operations */
 
@@ -40,11 +40,11 @@ typedef struct AMPI_Request {
     int tag;
     double *v;
     double *a;
-    int va;
+    long int va;
     int oc;
     int dest;
     int size;
-    int aw;
+    long int aw;
 } AMPI_Request;
 
 typedef struct AMPI_Tupel {

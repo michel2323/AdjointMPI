@@ -101,7 +101,7 @@ void ampi_interpret_tape(void);
 void ampi_print_tape(void);
 /* Call AMPI tape printer from external tape printer for one tape entry */
 void ampi_print_tape_entry(int *j);
-void ampi_check_tape_size(int size);
+void ampi_check_tape_size(long int size);
 
 /* AMPI routines which are defined as external. These routines need to be implemented by
  * the external tape library. They should implement the data flow between the external
@@ -124,7 +124,7 @@ extern void ampi_set_adj(INT64*, double*);
 extern void ampi_get_idx(void* buf, int* i, INT64* idx);
 
 /* Create a tape entry in the external tape, indicating an external AMPI call */
-extern void ampi_create_tape_entry(int* i);
+extern void ampi_create_tape_entry(long int* i);
 
 /* Create size tape entries to store the values of buf. Refer to receive buffer without
  * initialization */
