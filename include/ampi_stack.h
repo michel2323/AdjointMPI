@@ -7,8 +7,8 @@
 
 typedef struct {
     double *v;
-    int top;
-    size_t size;
+    long int top;
+    long int size;
 } ampi_stack;
 
 void push(ampi_stack *s, double val);
