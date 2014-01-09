@@ -701,7 +701,7 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
     if(status!=MPI_STATUS_IGNORE)
       ampi_tape[ampi_vac+count+1].tag = status->MPI_TAG;
     else
-      ampi_tape[ampi_vac+count+1].tag = 0;
+      ampi_tape[ampi_vac+count+1].tag = recvtag;
 
 #pragma omp parallel for
     for(i=0;i<count;i=i+1) {

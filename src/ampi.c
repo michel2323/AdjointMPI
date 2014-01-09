@@ -271,12 +271,10 @@ int AMPI_Bcast_b(double *buf, int count, MPI_Datatype datatype, int root, MPI_Co
       for(i=0;i<count;i=i+1) recvbuf[i]=0;
     }
     else {
-      for(i=0;i<count;i=i+1) {
-	sendbuf[i]=0;
-      }
+      for(i=0;i<count;i=i+1) sendbuf[i]=0;
       for(i=0;i<count;i=i+1) recvbuf[i]=0;
     }
-    ierr=MPI_Reduce(sendbuf,recvbuf,1,MPI_DOUBLE,MPI_SUM,root,comm);
+    ierr=MPI_Reduce(sendbuf,recvbuf,count,MPI_DOUBLE,MPI_SUM,root,comm);
     if(rank==root) {
       for(i=0;i<count;i=i+1) buf[i]=recvbuf[i];
     }
