@@ -51,7 +51,7 @@ extern "C" {
     ampi_interpret_tape();
   }
 
-  void ampi_create_tape_entry(int *i) {
+  void ampi_create_tape_entry(long int *i) {
     //todo: insert an external function handler!!!
     global_tape->register_external_function(&ampi_tape_wrapper, 0);
     //this will call ampi_interpret_tape

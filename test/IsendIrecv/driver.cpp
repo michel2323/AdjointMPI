@@ -10,21 +10,25 @@ void comp(double *x, double &y, int &n) {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   double *buf=new double[n];
   y=0;
+  MPI_Request request[2];
   if(rank==0) {
     for(int i=0;i<n;i++) x[i]=x[i]*x[i];
-    MPI_Send(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD);
-    MPI_Recv(buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    MPI_Irecv(buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[0]);
+    MPI_Isend(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[1]);
+    MPI_Wait(&request[0],MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) {
       y+=buf[i];
     }
   }
   if(rank==1) {
-    MPI_Recv(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    MPI_Irecv(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[0]);
+    MPI_Wait(&request[0],MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) { 
       buf[i]=sin(buf[i]);
     }
-    MPI_Send(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD);
+    MPI_Isend(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[1]);
   }
+  MPI_Wait(&request[1],MPI_STATUS_IGNORE);
   delete [] buf;
 }
 
@@ -49,19 +53,9 @@ int main(int argc, char *argv[]) {
   double *x=new double[n];
   double y=0;
   for(int i=0;i<n;i++) x[i]=(double) i;
-  double *x_saved=new double[n];
-  for(int i=0;i<n;i++) x_saved[i]=x[i];
   comp(x,y,n);
   cout << "Result:" << y << endl;
-  cout << "Derivatives:" << endl;
-  double y_saved=y;
-  for(int i=0;i<n;i++) {
-    for(int j=0;j<n;j++) x[j]=x_saved[j];
-    x[i]=x[i]+h;
-    comp(x,y,n);
-    cout << (y-y_saved)/h << endl;
-  }
   MPI_Finalize();
-  delete [] x; delete [] x_saved;
+  delete [] x;
   return 0;
 }

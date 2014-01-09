@@ -1,4 +1,4 @@
-INDENTATION_OK=echo " -> OK"
+INDENTATION_OK=@echo " -> OK "
 
 ifndef MPICC
 MPICC=mpicc

@@ -13,21 +13,25 @@ void comp(active *x, active &y, int &n) {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   active *buf=new active[n];
   y=0;
+  MPI_Request request[2];
   if(rank==0) {
     for(int i=0;i<n;i++) x[i]=x[i]*x[i];
-    AMPI_Send(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD);
-    AMPI_Recv(buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    AMPI_Irecv(buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[0]);
+    AMPI_Isend(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[1]);
+    AMPI_Wait(&request[0],MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) {
       y+=buf[i];
     }
   }
   if(rank==1) {
-    AMPI_Recv(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    AMPI_Irecv(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[0]);
+    AMPI_Wait(&request[0],MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) { 
       buf[i]=sin(buf[i]);
     }
-    AMPI_Send(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD);
+    AMPI_Isend(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[1]);
   }
+  AMPI_Wait(&request[1],MPI_STATUS_IGNORE);
   delete [] buf;
 }
 
