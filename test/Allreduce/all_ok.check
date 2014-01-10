@@ -1,0 +1,124 @@
+Problem size: 10
+Result:8.90388
+Problem size: 10
+Result:0
+Problem size: 10
+Result:0
+Problem size: 10
+Result:0
+Problem size: 10
+Result:8.90388
+Derivatives:
+3.201e-06
+-33.7979
+1881.79
+-77148
+-537081
+2.80985e+06
+5.03149e+06
+-139271
+-879418
+-1.59828e+06
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Problem size: 10
+Result:8.90388
+Derivatives:
+3.2e-06
+-33.7974
+1885.71
+-76678.1
+-511463
+2.70881e+06
+-5.12455e+06
+-1.47889e+07
+1.05203e+07
+-1.48337e+08
+AMPI chunk size: 500000
+AMPI chunks allocated: 1
+AMPI memory allocated: 24000000
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+AMPI chunk size: 500000
+AMPI chunks allocated: 1
+AMPI memory allocated: 24000000
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+AMPI chunk size: 500000
+AMPI chunks allocated: 1
+AMPI memory allocated: 24000000
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+AMPI chunk size: 500000
+AMPI chunks allocated: 1
+AMPI memory allocated: 24000000
