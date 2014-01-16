@@ -6,6 +6,9 @@
 /*#define DEBUG*/
 #define NO_COMM_WORLD
 #include <ampi_tape.h> 
+#ifdef __cplusplus
+#include <ampi_interface.hpp> 
+#endif
 
 
 AMPI_ht_el *AMPI_ht=NULL;
@@ -23,7 +26,7 @@ int AMPI_Reset_Tape() {
 
 int AMPI_Init(int* argc, char*** argv) {
     long int size=AMPI_CHUNK_SIZE;
-    ampi_tape = malloc(size*sizeof(ampi_tape_entry));
+    ampi_tape = (ampi_tape_entry*) malloc(size*sizeof(ampi_tape_entry));
     return AMPI_Init_f(argc, argv);
 }
 
@@ -38,8 +41,8 @@ int AMPI_Finalize() {
 int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm) {
 
     int i=0;
-    double * tmp = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*2);
+    double * tmp = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*2);
     ampi_check_tape_size(count+1);
     long int new_vac = ampi_vac+count;
 
@@ -70,8 +73,8 @@ int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status) {
 
     int i=0;
-    double * tmp = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
+    double * tmp = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int)*2);
     /*INT64 tmp_int64 = 0;*/
     ampi_check_tape_size(count+1);
     long int new_vac = ampi_vac;
@@ -108,15 +111,15 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
     int i=0;
     /*new AMPI request*/
-    AMPI_Request *request=malloc(sizeof(AMPI_Request));
+    AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     /*new hash element*/
-    AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
+    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
     ht_el->key=mpi_request;
     request->buf = buf;
     request->aw=0;
     request->request=mpi_request;
-    double * tmp = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*2);
+    double * tmp = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*2);
     ampi_check_tape_size(count+1);
     long int new_vac = ampi_vac+count;
 
@@ -143,7 +146,7 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 	/*tape[request->va].arg[0] = tape_entry::vac+count;*/
     /*}*/
     /*else {*/
-	ampi_tape[ampi_vac+count].request = malloc(sizeof(AMPI_Request));
+	ampi_tape[ampi_vac+count].request = (AMPI_Request*) malloc(sizeof(AMPI_Request));
 	/*tape[tape_entry::vac+count].request = new AMPI_dco_Request;*/
 	/*}*/
     /*point current request index to this tape entry*/
@@ -159,15 +162,15 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 
 int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
     int i=0;
-    AMPI_Request *request=malloc(sizeof(AMPI_Request));
+    AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     /*INT64 tmp_int64 = 0;*/
-    AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
+    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
     ht_el->key=mpi_request;
     request->buf = buf;
     request->aw=0;
     request->request=mpi_request;
-    double * tmp = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
+    double * tmp = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int)*2);
     ampi_check_tape_size(count+1);
     long int new_vac = ampi_vac;
 
@@ -198,7 +201,7 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 	/*tape[request->va].arg[0] = tape_entry::vac;*/
     /*}*/
     /*else {*/
-	ampi_tape[ampi_vac].request = malloc(sizeof(AMPI_Request));
+	ampi_tape[ampi_vac].request = (AMPI_Request*) malloc(sizeof(AMPI_Request));
 	/*tape[tape_entry::vac].request =  new AMPI_dco_Request;*/
 	/*}*/
     /*request->r.v = tmp;*/
@@ -215,13 +218,13 @@ int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
     int i=0;
     int ret=0;
     AMPI_ht_el *ht_req=NULL;
-    AMPI_Request *request=malloc(sizeof(AMPI_Request));
+    AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     void *addr=mpi_request;
     HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
     if(ht_req) {
 	*request=ht_req->request;
 	double * tmp = (double*) request->v;
-	ampi_tape[ampi_vac].arg=malloc(sizeof(int));
+	ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int));
 	ampi_check_tape_size(1);
 	long int new_vac = ampi_vac;
 
@@ -281,7 +284,7 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
 
     int rank=0;
     int i=0;
-    double * tmp = malloc(sizeof(double)*count);
+    double * tmp = (double*) malloc(sizeof(double)*count);
     for(i=0;i<count;i++) tmp[i]=0;
     MPI_Comm_rank(comm,&rank);
     ampi_check_tape_size(count+1);
@@ -300,7 +303,7 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
       ampi_create_dummies(buf, &count);
     }
     ampi_create_tape_entry(&new_vac);
-    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*2);
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*2);
     ampi_tape[ampi_vac+count].oc = BCAST;
     ampi_tape[ampi_vac+count].arg[0] = count;
     ampi_tape[ampi_vac+count].arg[1] = root;
@@ -323,9 +326,9 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
 int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm) {
 
     int i=0;
-    double * tmp_send = malloc(sizeof(double)*count);
-    double * tmp_recv = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*3);
+    double * tmp_send = (double*) malloc(sizeof(double)*count);
+    double * tmp_recv = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*3);
 
     ampi_check_tape_size(2*count+1);
     long int new_vac = ampi_vac+count;
@@ -383,9 +386,9 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm) {
 
     int i=0;
-    double * tmp_send = malloc(sizeof(double)*count);
-    double * tmp_recv = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*3);
+    double * tmp_send = (double*) malloc(sizeof(double)*count);
+    double * tmp_recv = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*3);
 
     ampi_check_tape_size(2*count+1);
     long int new_vac = ampi_vac+count;
@@ -443,9 +446,9 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
   int i=0;
   int size=0;
   MPI_Comm_size(comm,&size);
-  double * tmp_send = malloc(sizeof(double)*sendcnt*size);
-  double * tmp_recv = malloc(sizeof(double)*recvcnt);
-  ampi_tape[ampi_vac+sendcnt*size].arg=malloc(sizeof(int)*3);
+  double * tmp_send = (double*) malloc(sizeof(double)*sendcnt*size);
+  double * tmp_recv = (double*) malloc(sizeof(double)*recvcnt);
+  ampi_tape[ampi_vac+sendcnt*size].arg=(int*) malloc(sizeof(int)*3);
   ampi_tape[ampi_vac+sendcnt*size].comm = comm;
   ampi_check_tape_size(recvcnt+sendcnt*size+1);
   ampi_create_dummies(recvbuf, &recvcnt);
@@ -494,9 +497,9 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
     /* Allocate maximum size of sendbuf */
     for(i=0;i<size;i=i+1) 
 	if(sendcnts[i]+displs[i]>max_size) max_size=sendcnts[i]+displs[i];
-    double * tmp_send = malloc(sizeof(double)*max_size);
-    double * tmp_recv = malloc(sizeof(double)*recvcnt);
-    ampi_tape[ampi_vac+max_size].arg=malloc(sizeof(int)*(3+2*size));
+    double * tmp_send = (double*) malloc(sizeof(double)*max_size);
+    double * tmp_recv = (double*) malloc(sizeof(double)*recvcnt);
+    ampi_tape[ampi_vac+max_size].arg=(int*) malloc(sizeof(int)*(3+2*size));
     ampi_tape[ampi_vac+max_size].comm = comm;
 
     /*sendbuf dummies*/
@@ -539,9 +542,9 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
   int i=0;
   int size=0;
   MPI_Comm_size(comm,&size);
-  double * tmp_send = malloc(sizeof(double)*sendcnt);
-  double * tmp_recv = malloc(sizeof(double)*recvcnt*size);
-  ampi_tape[ampi_vac+sendcnt].arg=malloc(sizeof(int)*3);
+  double * tmp_send = (double*) malloc(sizeof(double)*sendcnt);
+  double * tmp_recv = (double*) malloc(sizeof(double)*recvcnt*size);
+  ampi_tape[ampi_vac+sendcnt].arg=(int*) malloc(sizeof(int)*3);
   ampi_tape[ampi_vac+sendcnt].comm = comm;
   ampi_check_tape_size(recvcnt*size+sendcnt+1);
   int scount=recvcnt*size;
@@ -591,9 +594,9 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
     /* Determine and allocate maximum size of recvbuf */
     for(i=0;i<size;i=i+1) 
 	if(recvcnts[i]+displs[i]>max_size) max_size=recvcnts[i]+displs[i];
-    double * tmp_send = malloc(sizeof(double)*sendcnt);
-    double * tmp_recv = malloc(sizeof(double)*max_size);
-    ampi_tape[ampi_vac+sendcnt].arg=malloc(sizeof(int)*3);
+    double * tmp_send = (double*) malloc(sizeof(double)*sendcnt);
+    double * tmp_recv = (double*) malloc(sizeof(double)*max_size);
+    ampi_tape[ampi_vac+sendcnt].arg=(int*) malloc(sizeof(int)*3);
     ampi_tape[ampi_vac+sendcnt].comm = comm;
 
     /*sendbuf dummies*/
@@ -629,9 +632,9 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 }
 
 int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
-    AMPI_Request *request=malloc(sizeof(AMPI_Request));
-    AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
-    ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
+    AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
+    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
+    ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int)*2);
     ht_el->key=mpi_request;
     request->buf = buf;
     request->aw=0;
@@ -647,9 +650,9 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
     return 0;
 }
 int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
-    AMPI_Request *request=malloc(sizeof(AMPI_Request));
-    AMPI_ht_el *ht_el=malloc(sizeof(AMPI_ht_el));
-    ampi_tape[ampi_vac].arg=malloc(sizeof(int)*2);
+    AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
+    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
+    ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int)*2);
     ht_el->key=mpi_request;
     request->buf = buf;
     request->aw=0;
@@ -666,9 +669,9 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
 }
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status) {
     int i=0;
-    double * tmp = malloc(sizeof(double)*count);
-    ampi_tape[ampi_vac+count].arg=malloc(sizeof(int)*2);
-    ampi_tape[ampi_vac+count+1].arg=malloc(sizeof(int)*2);
+    double * tmp = (double*) malloc(sizeof(double)*count);
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*2);
+    ampi_tape[ampi_vac+count+1].arg=(int*) malloc(sizeof(int)*2);
     /*This may be important for the openmp loop*/
     /*INT64 tmp_int64 = 0;*/
     ampi_check_tape_size(2*count+2);
@@ -779,7 +782,7 @@ void ampi_interpret_tape(){
 #endif
     switch(ampi_tape[ampi_vac].oc){ 
 	case SEND : {
-			tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 #ifdef NO_COMM_WORLD
 			comm=ampi_tape[i].comm;
 #endif
@@ -795,7 +798,7 @@ void ampi_interpret_tape(){
 			break;
 		    }
 	case RECV : {
-			tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
 			    tmp_entry=&ampi_tape[i+j+1];
 			    ampi_get_adj(&tmp_entry->idx, &tmp_d[j]);
@@ -843,7 +846,7 @@ void ampi_interpret_tape(){
 			 break;
 		     }
 	case WAIT : {
-			tmp_d = malloc(sizeof(double)*ampi_tape[ampi_tape[i].arg[0]].arg[0]);
+			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[ampi_tape[i].arg[0]].arg[0]);
 			if(ampi_tape[i].request->oc == AMPI_IR) {
 			    for(j = 0 ; j < ampi_tape[ampi_tape[i].arg[0]].arg[0] ; j++) {
 				tmp_entry=&ampi_tape[ampi_tape[i].arg[0]+j+1];
@@ -859,7 +862,7 @@ void ampi_interpret_tape(){
 #endif
 			}
 			ampi_tape[i].request->a = tmp_d;
-			ampi_tape[i].request->request=malloc(sizeof(MPI_Request));
+			ampi_tape[i].request->request=(MPI_Request*) malloc(sizeof(MPI_Request));
 #ifndef NO_COMM_WORLD 
 			ampi_tape[i].request->comm=MPI_COMM_WORLD;
 #endif
@@ -875,7 +878,7 @@ void ampi_interpret_tape(){
 #endif
 		       MPI_Comm_rank(comm,&rank);
 		       
-			tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			if(rank!=root) {
 			  for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
 			    tmp_entry=&ampi_tape[i-ampi_tape[i].arg[0]+j];
@@ -903,8 +906,8 @@ void ampi_interpret_tape(){
 			      op = MPI_MIN;
 			  if(ampi_tape[i].arg[2] == REDUCE_MAX)
 			      op = MPI_MAX;
-			  tmp_d_send = malloc(sizeof(double)*ampi_tape[i].arg[0]);
-			  tmp_d_recv = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			  tmp_d_send = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			  tmp_d_recv = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			  for(j=0;j<ampi_tape[i].arg[0];j=j+1)
 				ampi_get_adj(&ampi_tape[i+1+j].idx, &tmp_d_recv[j]);
 			  for(j=0;j<ampi_tape[i].arg[0];j=j+1) tmp_d_send[j]=0;
@@ -929,8 +932,8 @@ void ampi_interpret_tape(){
 			      op = MPI_MIN;
 			  if(ampi_tape[i].arg[2] == REDUCE_MAX)
 			      op = MPI_MAX;
-			  tmp_d_send = malloc(sizeof(double)*ampi_tape[i].arg[0]);
-			  tmp_d_recv = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			  tmp_d_send = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			  tmp_d_recv = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			  for(j=0;j<ampi_tape[i].arg[0];j=j+1)
 			      ampi_get_adj(&ampi_tape[i+1+j].idx, &tmp_d_recv[j]);
 #ifdef NO_COMM_WORLD
@@ -969,8 +972,8 @@ void ampi_interpret_tape(){
 			 int crecv=ampi_tape[i].arg[1];
 			 int csend=ampi_tape[i].arg[2];
 			 MPI_Comm_size(comm,&size);
-			 double *sendbuf=malloc(sizeof(double)*csend*size);
-			 double *recvbuf=malloc(sizeof(double)*crecv);
+			 double *sendbuf=(double*) malloc(sizeof(double)*csend*size);
+			 double *recvbuf=(double*) malloc(sizeof(double)*crecv);
 			 for(j=0;j<crecv;j++) {
 			   ampi_get_adj(&ampi_tape[i+1+j].idx,&recvbuf[j]);
 			 }
@@ -994,8 +997,8 @@ void ampi_interpret_tape(){
 			 int crecv=ampi_tape[i].arg[1];
 			 int csend=ampi_tape[i].arg[2];
 			 MPI_Comm_size(comm,&size);
-			 double *sendbuf=malloc(sizeof(double)*csend);
-			 double *recvbuf=malloc(sizeof(double)*crecv*size);
+			 double *sendbuf=(double*) malloc(sizeof(double)*csend);
+			 double *recvbuf=(double*) malloc(sizeof(double)*crecv*size);
 			 for(j=0;j<crecv*size;j++) {
 			   ampi_get_adj(&ampi_tape[i+1+j].idx,&recvbuf[j]);
 			 }
@@ -1013,7 +1016,7 @@ void ampi_interpret_tape(){
 	case SENDRECVREPLACE : {
 			     /*two entries for sendrecvreplace, decrease tape index*/
 			     /*i=i-1;ampi_vac=ampi_vac-1;*/
-			tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
+			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			/*take adjoints out of the tape in the send buffer*/
 #pragma omp parallel for private(tmp_entry)
 			for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
@@ -1095,7 +1098,7 @@ void ampi_print_tape_entry(int *i) {
 void ampi_check_tape_size(long int size) {
     if(ampi_vac>=ampi_chunks*AMPI_CHUNK_SIZE-size) {
 	ampi_tape_entry *tmp;
-        tmp=realloc(ampi_tape,(ampi_chunks+1)*AMPI_CHUNK_SIZE*sizeof(ampi_tape_entry));
+        tmp=(ampi_tape_entry*) realloc(ampi_tape,(ampi_chunks+1)*AMPI_CHUNK_SIZE*sizeof(ampi_tape_entry));
 	if(tmp != NULL) {
 	    ampi_tape=tmp;
 	    ampi_chunks=ampi_chunks+1;

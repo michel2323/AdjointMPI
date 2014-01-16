@@ -18,7 +18,7 @@ double pop(ampi_stack *s) {
 
 void stack_init(ampi_stack *s) {
     s->top=0;
-    s->v = malloc(sizeof(double)*CHUNK_SIZE);
+    s->v = (double*) malloc(sizeof(double)*CHUNK_SIZE);
     s->size=CHUNK_SIZE;
 }
 
@@ -35,7 +35,7 @@ int full(ampi_stack *s) {
 void expand(ampi_stack *s) {
     double *tmp;
     s->size=s->size+CHUNK_SIZE;
-    tmp=realloc(s->v,s->size*sizeof(double));
+    tmp=(double*) realloc(s->v,s->size*sizeof(double));
     if(tmp != NULL) {
 	s->v = tmp;
     }
@@ -44,7 +44,7 @@ void expand(ampi_stack *s) {
 void shrink(ampi_stack *s) {
     double *tmp;
     s->size=s->size-CHUNK_SIZE;
-    tmp=realloc(s->v,s->size*sizeof(double));
+    tmp=(double*) realloc(s->v,s->size*sizeof(double));
     if(tmp != NULL) {
 	s->v = tmp;
     }
