@@ -63,7 +63,7 @@ typedef struct ampi_tape_entry {
     int tag;
 }ampi_tape_entry;
 
-/* AMPI taping routines which have an MPI counterpart that is adjoined.*/
+/*! AMPI taping routines which have an MPI counterpart that is adjoined.*/
 
 int AMPI_Reset_Tape();
 int AMPI_Init(int*, char***);

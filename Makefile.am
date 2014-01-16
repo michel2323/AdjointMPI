@@ -1,8 +1,5 @@
-SUBDIRS = src 
+SUBDIRS = src doc 
 
-EXTRA_DIST = examples interfaces
+EXTRA_DIST = examples interfaces test doc
 
-dist-hook:
-		rm -rf `find $(distdir)/examples -type d -name .svn`
-		rm -rf `find $(distdir)/interfaces -type d -name .svn`
 

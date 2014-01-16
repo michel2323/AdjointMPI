@@ -42,7 +42,8 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt])
 
 AC_CONFIG_FILES([Makefile
-		 src/Makefile])
+		 src/Makefile
+                 doc/Makefile])
 AC_SUBST(MPICC)
 AC_SUBST(MPI_INC_DIR)
 AC_SUBST(MPI_LIB_DIR)
@@ -53,4 +54,11 @@ AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 
 AC_OUTPUT
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+if test -z "$DOXYGEN";
+   then AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
+fi
+AM_CONDITIONAL([HAVE_DOXYGEN],
+[test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN],
+[AC_CONFIG_FILES([doc/Doxyfile])])
 AMPI_REPORT
