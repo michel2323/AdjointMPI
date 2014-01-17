@@ -1,6 +1,10 @@
 #ifndef AMPI_H
 #define AMPI_H
-/* Basic AMPI C library used for overloading and source transformation. All MPI routines
+/** \file
+ * \brief Header file for source transformation tools.
+ *
+ * This file constitutes the interface for source transformation tools. The AMPI
+ * tape is dependent on these routines. All MPI routines
  * are subdivided into their forward _f and backward _b counterpart. The forward routines
  * are called during the forward/taping run. The backward routines are called during the
  * reverse/interpretation run.
@@ -10,57 +14,149 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+/**
+ * \def INT64
+ * Defines the type of the tape index
+ */
+#define INT64 long int
+
+/**
+ * @{
+ * \name AMPI_Request Send/Receive
+ * Defines tor distinguishing send and receive in an AMPI_Request
+ */
 #define AMPI_IS 1
 #define AMPI_IR 2
+/**@}*/
 
+
+/**
+ * @{
+ * \name Legacy defines with active predefined constants
+ */
 #define AMPI_COMM_WORLD MPI_COMM_WORLD
 #define AMPI_MAX_PROCESSOR_NAME MPI_MAX_PROCESSOR_NAME
 #define AMPI_Status MPI_Status
 #define AMPI_DOUBLE MPI_DOUBLE
-/*#define INT64 double**/
-#define INT64 long int
+/**@}*/
 
-/* Reduce operations */
 
+/**
+ * @{
+ * \name Active Reduce Operations
+ */
 #define AMPI_SUM   1
 #define AMPI_PROD  2
 #define AMPI_MIN   3
 #define AMPI_MAX   4
+/**@}*/
 
-
-/* AMPI request, replacing the MPI request */
+/**
+ * AMPI request, replacing the MPI request 
+ */
 typedef struct AMPI_Request {
-    MPI_Request *request;
-    MPI_Status status;
-    MPI_Comm comm;
+    MPI_Request *request; /** Original request */
+    MPI_Status status; /** Original status */
+    MPI_Comm comm; /** Original communicator */
 
     /*special for tape*/
-    void *buf;
+    void *buf;            /** Only used in the tape. Here we store the pointer to the active buffer that is conveyed to the Wait. */
 
     int tag;
-    double *v;
-    double *a;
-    long int va;
+    double *v;            /** Incoming or outgoing values of the mapped active buffer. */
+    double *a;            /** Incoming or outgoing adjoints of the mapped tape. */
+    long int va;          /** Tape index */
     int oc;
-    int dest;
-    int size;
-    long int aw;
+    int dest;             /** Destination or source. */
+    int size;             /** Size of the buffer. */
+    long int aw;          /** Anti wait flag*/
 } AMPI_Request;
 
+
+/**
+ * Tupel used in the MPI_MAX and MPI_MIN reduction to save the rank of
+ * the process with the maximum or minimum
+ */
 typedef struct AMPI_Tupel {
-    double v;
-    int j;
+    double v; /** value */
+    int j;    /** rank */
 } AMPI_Tupel;
 
-/* Non communication routines (Init, Finalize...)*/
 
+/**
+ * Active forward MPI_Init.
+ * First chunk of the AMPI tape is allocated.
+ *
+ * @param int* argc
+ * @param char*** argv
+ *
+ * @return error code 
+ */
 int AMPI_Init_f(int*, char***);
+
+/**
+ * Active reverse MPI Init.
+ * AMPI data structures are destroyed and MPI_Finalize() is called.
+ *
+ * @param int* Dummy argc. Not used.
+ * @param char*** Dummy argv. Not used.
+ *
+ * @return error code
+ */
 int AMPI_Init_b(int*, char***);
+
+/**
+ * Legacy active variant of MPI_Comm_size. Only a wrapper of MPI_Comm_size.
+ *
+ * @param MPI_Comm Communicator.
+ * @param int* Number of processes.
+ *
+ * @return error code 
+ */
 int AMPI_Comm_size(MPI_Comm, int*);
+
+/**
+ * Active variant of MPI_Comm_rank. The rank is saved in a global variable
+ * to avoid repeated calls to MPI_Comm_rank.
+ *
+ * @param MPI_Comm Communicator.
+ * @param int* Rank.
+ *
+ * @return error code 
+ */
 int AMPI_Comm_rank(MPI_Comm, int*);
+
+/**
+ * Legacy. Wrapper to MPI_Get_processor_name 
+ *
+ * @param char* Processor name.
+ * @param int* Processor name length. 
+ *
+ * @return error code
+ */
 int AMPI_Get_processor_name(char*, int*);
+
+/**
+ * Active barrier. Amounts to a wrapper of MPI_Barrier. Does 
+ * not need to be traced.
+ *
+ * @param MPI_Comm Communicator.
+ *
+ * @return error code
+ */
 int AMPI_Barrier(MPI_Comm);
+
+/**
+ * Active forward MPI_Finalize(). Nothing is done here. 
+ *
+ * @return error code 
+ */
 int AMPI_Finalize_f();
+/**
+ * Active reverse MPI_Finalize(). Nothing is done here. 
+ *
+ * @return error code 
+ */
 int AMPI_Finalize_b();
 
 /* Blocking communication */
