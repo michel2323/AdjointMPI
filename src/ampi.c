@@ -83,8 +83,7 @@ int AMPI_Recv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag
 }
 
 int AMPI_Send_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm) {
-    MPI_Status status;
-    return MPI_Recv(buf, count, datatype, dest, tag, comm, &status);
+    return MPI_Recv(buf, count, datatype, dest, tag, comm, MPI_STATUS_IGNORE);
     
 }
 

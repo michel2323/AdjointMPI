@@ -87,8 +87,8 @@ typedef struct AMPI_Tupel {
  * Active forward MPI_Init.
  * First chunk of the AMPI tape is allocated.
  *
- * @param int* argc
- * @param char*** argv
+ * @param argc argc of passive code.
+ * @param argv argv of passive code.
  *
  * @return error code 
  */
@@ -98,53 +98,53 @@ int AMPI_Init_f(int*, char***);
  * Active reverse MPI Init.
  * AMPI data structures are destroyed and MPI_Finalize() is called.
  *
- * @param int* Dummy argc. Not used.
- * @param char*** Dummy argv. Not used.
+ * @param argv Dummy argc. Not used.
+ * @param argc Dummy argv. Not used.
  *
  * @return error code
  */
-int AMPI_Init_b(int*, char***);
+int AMPI_Init_b(int* argc, char*** argv);
 
 /**
  * Legacy active variant of MPI_Comm_size. Only a wrapper of MPI_Comm_size.
  *
- * @param MPI_Comm Communicator.
- * @param int* Number of processes.
+ * @param comm Communicator.
+ * @param numprocs Number of processes.
  *
  * @return error code 
  */
-int AMPI_Comm_size(MPI_Comm, int*);
+int AMPI_Comm_size(MPI_Comm comm, int* numprocs);
 
 /**
  * Active variant of MPI_Comm_rank. The rank is saved in a global variable
  * to avoid repeated calls to MPI_Comm_rank.
  *
- * @param MPI_Comm Communicator.
- * @param int* Rank.
+ * @param comm Communicator.
+ * @param rank Rank of calling process.
  *
  * @return error code 
  */
-int AMPI_Comm_rank(MPI_Comm, int*);
+int AMPI_Comm_rank(MPI_Comm comm, int* rank);
 
 /**
  * Legacy. Wrapper to MPI_Get_processor_name 
  *
- * @param char* Processor name.
- * @param int* Processor name length. 
+ * @param name Processor name.
+ * @param namelenth Processor name length. 
  *
  * @return error code
  */
-int AMPI_Get_processor_name(char*, int*);
+int AMPI_Get_processor_name(char* name, int* namelength);
 
 /**
  * Active barrier. Amounts to a wrapper of MPI_Barrier. Does 
  * not need to be traced.
  *
- * @param MPI_Comm Communicator.
+ * @param comm Communicator with the processes that execute a barrier.
  *
  * @return error code
  */
-int AMPI_Barrier(MPI_Comm);
+int AMPI_Barrier(MPI_Comm comm);
 
 /**
  * Active forward MPI_Finalize(). Nothing is done here. 
@@ -161,17 +161,93 @@ int AMPI_Finalize_b();
 
 /* Blocking communication */
 
+/**
+ * @brief Active forward send. 
+ *
+ * The forward send amounts to a wrapper of the MPI_Send.
+ *
+ * @param buf Buffer with values that are to be sent.
+ * @param count Number of buffer elements.
+ * @param datatype MPI data type of the buffer elements.
+ * @param dest Rank of destination process.
+ * @param tag Message tag.
+ * @param comm MPI communicator.
+ *
+ * @return error code 
+ */
 int AMPI_Send_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
-int AMPI_Recv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status);
-int AMPI_Send_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+
+/**
+ * @brief Active reverse send. 
+ *
+ * The active reverse send amounts to an MPI_Receive with MPI_STATUS_IGNORE.
+ *
+ * @param buf Buffer with adjoints that are received.
+ * @param count Number of buffer elements.
+ * @param datatype MPI data type of the buffer elements.
+ * @param src Rank of source process.
+ * @param tag Message tag.
+ * @param comm MPI communicator.
+ *
+ * @return error code 
+ */
+int AMPI_Send_b(double *buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm);
+
+/**
+ * @brief Active forward receive.
+ *
+ * The active forward receive is a wrapper of MPI_Recv.
+ *
+ * @param buf Buffer with values that are received.
+ * @param count Number of buffer elements.
+ * @param datatype MPI data type of the buffer elements.
+ * @param src Rank of source process.
+ * @param tag Message tag.
+ * @param comm MPI communicator.
+ * @param status MPI status of the received value message.
+ *
+ * @return error code 
+ */
+int AMPI_Recv_f(double *buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Status *status);
+
+/**
+ * @brief Active reverse receive.
+ *
+ * The active reverse receive is a wrapper of MPI_Send. The status is ignored.
+ *
+ * @param buf Buffer with adjoints that are sent.
+ * @param count Number of buffer elements.
+ * @param datatype MPI data type of the buffer elements.
+ * @param dest Rank of destination process.
+ * @param tag Message tag.
+ * @param comm MPI communicator.
+ * @param status Ignored. Only present for consistency with the MPI signatures.
+ *
+ * @return error code
+ */
 int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status);
 
 /* Non blocking communication */
 
+/**
+ * @brief Active forward non blocking send
+ *
+ * @param buf Buffer with values that are to be sent.
+ * @param count Number of buffer elements.
+ * @param datatype MPI data type of the buffer elements.
+ * @param dest Rank of destination process.
+ * @param tag Message tag.
+ * @param comm MPI communicator.
+ * @param request Active MPI_Request. Additional information (buf, count, dest,
+ * oc, comm and the original MPI_Request) is saved in here for later use in
+ * AMPI_Wait_f or AMPI_Waitall_f.
+ *
+ * @return error code 
+ */
 int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request);
+int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, AMPI_Request *request);
 int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request);
 int AMPI_Wait_f(AMPI_Request *request , MPI_Status *status);
-int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request);
 int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request);
 int AMPI_Wait_b(AMPI_Request *request, MPI_Status *status);
 int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status);
