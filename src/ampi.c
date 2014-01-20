@@ -440,8 +440,6 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 	for(i=0; i<count; i=i+1) {
 	    push(&reduce_stack,(double) recvtupel[i].j);
 	}
-
-	/*push(&reduce_stack,(double) count);*/
 	for(i=0; i<count; i=i+1) {
 	    recvbuf[i]=recvtupel[i].v;
 	}
@@ -465,7 +463,6 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     double *s = 0;
     double *s_d = 0; 
     double *r = 0;
-    /*double tmp=0;*/
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 #ifdef DEBUG
@@ -498,76 +495,75 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 	MPI_Send(recvbuf, count, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
     }
     MPI_Bcast(recvbuf, count, datatype, 0, MPI_COMM_WORLD);
-/*MPI_Bcast(recvbuf, count, datatype, root, comm);*/
-	s = (double*) malloc(sizeof(double)*count);
-	s_d = (double*) malloc(sizeof(double)*count);
-	r = (double*) malloc(sizeof(double)*count);
-	for(i=count-1 ; i>=0 ; i=i-1) {
-	    r[i] = pop(&reduce_stack);
-	}
-	for(i=count-1 ; i>=0 ; i=i-1) {
-	    s[i] = pop(&reduce_stack);
-	}
-	for(i=0; i<count; i=i+1) {
-	    s_d[i] = recvbuf[i];
-	}
-	if(op == MPI_PROD) {
+    s = (double*) malloc(sizeof(double)*count);
+    s_d = (double*) malloc(sizeof(double)*count);
+    r = (double*) malloc(sizeof(double)*count);
+    for(i=count-1 ; i>=0 ; i=i-1) {
+      r[i] = pop(&reduce_stack);
+    }
+    for(i=count-1 ; i>=0 ; i=i-1) {
+      s[i] = pop(&reduce_stack);
+    }
+    for(i=0; i<count; i=i+1) {
+      s_d[i] = recvbuf[i];
+    }
+    if(op == MPI_PROD) {
 #ifdef DEBUG
-	    printf("AMPI_Allreduce_b MPI_PROD\n");
+      printf("AMPI_Allreduce_b MPI_PROD\n");
 #endif
-	    for(i=0 ; i<count ; i=i+1) {
-		if(r[i]*s_d[i] == 0.0){
-		    sendbuf[i]=0;
-		    printf("--------------------------------------\n");
-		    printf("Arithmetic Exeption in adjoint reduce!\n");
-		    printf("Result set to 0. Hoping for the best.\n");
-		    printf("--------------------------------------\n");
-		}
-		else {
-		    sendbuf[i] = (r[i]/s[i])*s_d[i];
-		}
-	    }
+      for(i=0 ; i<count ; i=i+1) {
+	if(r[i]*s_d[i] == 0.0){
+	  sendbuf[i]=0;
+	  printf("--------------------------------------\n");
+	  printf("Arithmetic Exeption in adjoint reduce!\n");
+	  printf("Result set to 0. Hoping for the best.\n");
+	  printf("--------------------------------------\n");
 	}
-	if(op == MPI_SUM) {
+	else {
+	  sendbuf[i] = (r[i]/s[i])*s_d[i];
+	}
+      }
+    }
+    if(op == MPI_SUM) {
 #ifdef DEBUG
-	    printf("AMPI_Allreduce_b MPI_SUM\n");
+      printf("AMPI_Allreduce_b MPI_SUM\n");
 #endif
-	    for(i=0 ; i<count ; i=i+1) {
-		sendbuf[i] = s_d[i];
-	    }
-	}
-	free(s);
-	free(s_d);
-	free(r);
+      for(i=0 ; i<count ; i=i+1) {
+	sendbuf[i] = s_d[i];
+      }
+    }
+    free(s);
+    free(s_d);
+    free(r);
     }
     if(op == MPI_MIN || op == MPI_MAX) {
-	minmaxbuf_tmp = (double*) malloc(sizeof(double)*count);
+      minmaxbuf_tmp = (double*) malloc(sizeof(double)*count);
 #ifdef DEBUG
-	printf("AMPI_Allreduce_b MPI_MIN or MPI_MAX\n");
+      printf("AMPI_Allreduce_b MPI_MIN or MPI_MAX\n");
 #endif
-	MPI_Allreduce(recvbuf, minmaxbuf_tmp, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-	for(i=count-1;i>=0;i--) {
-	    idx=(int)pop(&reduce_stack);
-	    if(myid==idx) {
-		sendbuf[i]=minmaxbuf_tmp[i];
-	    }
-	    else {
-		sendbuf[i]=0;
-	    }
-            /*MPI_Bcast(&tmp, 1, datatype, idx,
-	     * MPI_COMM_WORLD);*/
-	    /*sendbuf[i]=tmp;*/
-	    
+      MPI_Allreduce(recvbuf, minmaxbuf_tmp, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      for(i=count-1;i>=0;i--) {
+	idx=(int)pop(&reduce_stack);
+	if(myid==idx) {
+	  sendbuf[i]=minmaxbuf_tmp[i];
 	}
-	free(minmaxbuf_tmp);
+	else {
+	  sendbuf[i]=0;
+	}
+	/*MPI_Bcast(&tmp, 1, datatype, idx,
+	 * MPI_COMM_WORLD);*/
+	/*sendbuf[i]=tmp;*/
+
+      }
+      free(minmaxbuf_tmp);
     }
 #ifdef DEBUG
     printf("AMPI_Allreduce_b result: ");
     for(i=0;i<count;i++) { 
-	/*sendbuf[i]=1;*/
-	/*recvbuf[i]=1;*/
-	printf("%f ",sendbuf[i]);
-	printf("%f ",recvbuf[i]);
+      /*sendbuf[i]=1;*/
+      /*recvbuf[i]=1;*/
+      printf("%f ",sendbuf[i]);
+      printf("%f ",recvbuf[i]);
     }
     printf("\n");
 #endif
