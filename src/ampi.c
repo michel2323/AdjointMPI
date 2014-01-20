@@ -115,26 +115,10 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     return MPI_Isend(buf, count, datatype, dest, tag, comm, request->request);
 }
 
-int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
-    request->v = buf;
-    request->dest= dest;
-    request->oc = AMPI_IR;
-    request->size = count;
-    /*request->tag = tag;*/
-    request->comm = comm;
-    return MPI_Irecv(buf, count, datatype, dest, tag, comm, request->request);
-}
-
-int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
-    int ierr=0;
-    ierr=MPI_Wait(request->request, status);
-    return ierr;
-}
-
 int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     int i = 0;
     if(!request->aw) {
-	MPI_Wait(request->request, &request->status);
+	MPI_Wait(request->request, MPI_STATUS_IGNORE);
 	for(i = 0 ; i < request->size ; i++) {
 	    buf[i] = request->a[i];
 	}
@@ -149,6 +133,16 @@ int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     } else {
 	return MPI_SUCCESS;
     }
+}
+
+int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+    request->v = buf;
+    request->dest= dest;
+    request->oc = AMPI_IR;
+    request->size = count;
+    /*request->tag = tag;*/
+    request->comm = comm;
+    return MPI_Irecv(buf, count, datatype, dest, tag, comm, request->request);
 }
 
 int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
@@ -169,6 +163,12 @@ int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     } else {
 	return MPI_SUCCESS;
     }
+}
+
+int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
+    int ierr=0;
+    ierr=MPI_Wait(request->request, status);
+    return ierr;
 }
 
 int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
@@ -288,7 +288,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
     AMPI_Tupel *sendtupel=0;
     AMPI_Tupel *recvtupel=0;
     int i=0;
-    if(op == MPI_PROD || op == MPI_SUM) {
+    if(op == MPI_PROD)  {
 	recvbuf_tmp=(double*) malloc(sizeof(double)*count);
 	for(i=0; i<count ; i=i+1) {
 	    push(&reduce_stack,sendbuf[i]);
@@ -296,7 +296,17 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 	MPI_Allreduce(sendbuf, recvbuf_tmp, count, datatype, op, comm);
 	for(i=0; i<count; i=i+1)
 	    push(&reduce_stack,recvbuf_tmp[i]);
-	/*MPI_Comm_rank(MPI_COMM_WORLD, &myid);*/
+	if(myid==root) {
+	    for(i=0; i<count; i=i+1) {
+		recvbuf[i]=recvbuf_tmp[i];
+	    }
+	}
+	free(recvbuf_tmp);
+	return MPI_SUCCESS;
+    }
+    if(op == MPI_SUM) {
+	recvbuf_tmp=(double*) malloc(sizeof(double)*count);
+	MPI_Reduce(sendbuf, recvbuf_tmp, count, datatype, op, root, comm);
 	if(myid==root) {
 	    for(i=0; i<count; i=i+1) {
 		recvbuf[i]=recvbuf_tmp[i];
@@ -320,7 +330,6 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 	for(i=0; i<count; i=i+1) {
 	    push(&reduce_stack,(double) recvtupel[i].j);
 	}
-	/*push(&reduce_stack,(double) count);*/
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 	if(myid==root) {
 	    for(i=0; i<count; i=i+1) {
@@ -375,25 +384,14 @@ int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 	    return MPI_SUCCESS;
     }
     if(op == MPI_SUM) {
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	s = (double*)malloc(sizeof(double)*count);
 	s_d = (double*)malloc(sizeof(double)*count);
-	r = (double*)malloc(sizeof(double)*count);
 	MPI_Bcast(recvbuf, count, datatype, root, comm);
-	for(i=count-1 ; i>=0 ; i=i-1) {
-	    r[i] = pop(&reduce_stack);
-	}
-	for(i=count-1 ; i>=0 ; i=i-1) {
-	    s[i] = pop(&reduce_stack);
-	}
 	for(i=0; i<count; i=i+1)
 	    s_d[i] = recvbuf[i];
 	for(i=0 ; i<count ; i=i+1) {
 	    sendbuf[i] = s_d[i];
 	}
-	free(s);
 	free(s_d);
-	free(r);
 	return MPI_SUCCESS;
     }
     if(op == MPI_MIN || op == MPI_MAX) {
