@@ -213,11 +213,10 @@ int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
     return ierr;
 }
 
-int AMPI_Waitall_b(int count, AMPI_Request *requests) {
-    MPI_Status status[count];
+int AMPI_Waitall_b(int count, AMPI_Request *requests, MPI_Status *status) {
     int i = 0;
     for(i = 0 ; i < count ; i++) {
-	AMPI_Wait_b(&requests[i], &status[i]);
+	AMPI_Wait_b(&requests[i], &requests[i].status);
     }
     return MPI_SUCCESS;
 }
@@ -232,7 +231,7 @@ int AMPI_Awaitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
     return MPI_SUCCESS;
 }
 
-int AMPI_Awaitall_b(int count, AMPI_Request *requests) {
+int AMPI_Awaitall_b(int count, AMPI_Request *requests, MPI_Status *status) {
     int i = 0;
     for(i = 0 ; i < count ; i++) {
 	if(requests[i].aw) {
@@ -560,8 +559,6 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 #ifdef DEBUG
     printf("AMPI_Allreduce_b result: ");
     for(i=0;i<count;i++) { 
-      /*sendbuf[i]=1;*/
-      /*recvbuf[i]=1;*/
       printf("%f ",sendbuf[i]);
       printf("%f ",recvbuf[i]);
     }
@@ -571,18 +568,15 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 }
 
 int AMPI_Sendrecv_replace_f(double *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status) {
-	return MPI_Sendrecv_replace(buf, count, datatype, dest, sendtag, source, recvtag, comm, status);
+  return MPI_Sendrecv_replace(buf, count, datatype, dest, sendtag, source, recvtag, comm, status);
 }
 
 int AMPI_Sendrecv_replace_b(double *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status) {
-    /*switch dest and source*/
-	return MPI_Sendrecv_replace(buf, count, datatype, source, sendtag, dest, recvtag, comm, status);
+  return MPI_Sendrecv_replace(buf, count, datatype, source, sendtag, dest, recvtag, comm, status);
 }
 
 int AMPI_Gather_f(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
-    int ierr=0;
-    ierr=MPI_Gather(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
-    return ierr;
+    return MPI_Gather(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
 }
 
 int AMPI_Gather_b(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
@@ -590,19 +584,10 @@ int AMPI_Gather_b(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvb
 }
 
 int AMPI_Scatter_f(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
-    int ierr=0;
-    ierr=MPI_Scatter(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
-    return ierr;
+    return MPI_Scatter(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
 }
 
 int AMPI_Scatter_b(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
     return MPI_Gather(recvbuf, recvcnt, recvtype, sendbuf, sendcnt, sendtype, root, comm);
 }
 
-int AMPI_get_stack_counter() {
-    return reduce_stack.top;
-}
-
-void AMPI_set_stack_counter(int counter) {
-   reduce_stack.top=counter;
-}

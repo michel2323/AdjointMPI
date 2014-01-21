@@ -1,11 +1,20 @@
 #ifndef AMPI_TAPE_INCLUDE
 #define AMPI_TAPE_INCLUDE
 
-/* Generic AMPI C tape. Don't touch this. The code is always mirrored with the AMPI repo.
- * Changing code here will result in merge conflicts. 
+/** \file
+ * \brief ampi_tape.h provides the AMPI tape intented to be used by an
+ * overloading AD tool. The AMPI tape handles and saves all the relevant MPI
+ * information, while the data is kept in the trace of the AD tool. Interface
+ * functions are defined that allow AMPI and the AD tool to exchange
+ * information. This interface routines need to be implemented for each AD tool.
+ * The MPI communications are directly mapped to the active routines defined in
+ * this file by calling the forward active routines in ampi.h. In the reverse
+ * section, the AD tool calls the AMPI tape through ampi_interpret_tape() when
+ * it hits an AMPI operation. The AMPI tape then executes the reverse MPI
+ * communication. 
  */
 
-/* Tape is static at the moment. Should become dynamic based on a chunk scheme */
+#define AMPI_DOUBLE MPI_DOUBLE
 #define AMPI_CHUNK_SIZE 500000
 #define ASSERT 
 
@@ -43,37 +52,80 @@
 
 /*int ampi_vac=0;*/
 
+/** 
+ * \struct 
+ * The UT_hash hash table is used to link the MPI_Request to an active
+ * AMPI_Request when dealing with an overloading AD tool. This struct defines
+ * the hash table data structure.  
+ *
+ * See further
+ * documentation at http://troydhanson.github.io/uthash/index.html
+ */
+
 typedef struct {
-    void *key;
-    AMPI_Request request;
-    UT_hash_handle hh; 
+  void *key; /**< Pointer to the MPI_Request */
+  AMPI_Request request; /**< The active AMPI_Request*/ 
+  UT_hash_handle hh; /**< Used internally by UT_hash */
 } AMPI_ht_el;
 
 
+/** 
+ * An element of the AMPI tape. 
+ */
 typedef struct ampi_tape_entry {
-    int oc;
-    int *arg;
-    /*int arg1;*/
-    /*int arg2;*/
-    /*double v;*/
-    /*double d;*/
-    INT64 idx;
-    AMPI_Request *request;
-    MPI_Comm comm;
-    int tag;
-}ampi_tape_entry;
+    int oc; /**< Operation code */
+    int *arg; /**< Array of arrguments */
+    INT64 idx; /**< AD tool tape index */
+    AMPI_Request *request; /**< Saved pointer to an active AMPI_Request */
+    MPI_Comm comm; /**< MPI_Communicator */
+    int tag; /**< MPI_Tag */
+} ampi_tape_entry;
 
 /*! AMPI taping routines which have an MPI counterpart that is adjoined.*/
 
+/**
+ * Reset the AMPI tape. All the tape entries are destroyed.
+ *
+ * @return error code
+ */
 int AMPI_Reset_Tape();
-int AMPI_Init(int*, char***);
+
+/**
+ * Initialize AMPI consisting of allocating the AMPI tape and calling AMPI_Init_f
+ *
+ * @param argc Forwarded to MPI. 
+ * @param argv Forwarded to MPI.
+ *
+ * @return error code
+ */
+int AMPI_Init(int* argc, char*** argv);
+
+/**
+ * AMPI Finalize is called _after_ the reverse section. Hence AMPI_Init_b is
+ * called here.
+ *
+ * @return error code
+ */
 int AMPI_Finalize();
 
-int AMPI_Send(void*, int, MPI_Datatype, int, int, MPI_Comm);
-int AMPI_Recv(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Status*);
+/**
+ * @brief Active blocking send with active buffer.
+ *
+ * @param buf Active buffer pointer.
+ *
+ */
+int AMPI_Send(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
-int AMPI_Isend(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Request *);
-int AMPI_Irecv(void*, int, MPI_Datatype, int, int, MPI_Comm, MPI_Request *);
+/**
+ * @brief Active blocking send with active buffer.
+ *
+ * @param buf Active buffer pointer.
+ *
+ */
+int AMPI_Recv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Status* status);
+
+int AMPI_Isend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request* request);
+int AMPI_Irecv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Request* request);
 
 int AMPI_Wait(MPI_Request *, MPI_Status *);
 int AMPI_Waitall(int , MPI_Request *, MPI_Status *);
@@ -94,8 +146,6 @@ int AMPI_Startall(int count, MPI_Request array_of_requests[]);
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
 /* AMPI routines that have to be called by the external tape */
 
-/* Call AMPI tape interpreter from external tape */
-void ampi_interpret_tape(void);
 
 /* Call AMPI tape printer from external tape printer */
 void ampi_print_tape(void);
@@ -103,30 +153,4 @@ void ampi_print_tape(void);
 void ampi_print_tape_entry(int *j);
 void ampi_check_tape_size(long int size);
 
-/* AMPI routines which are defined as external. These routines need to be implemented by
- * the external tape library. They should implement the data flow between the external
- * tape and the AMPI tape.
- */
-
-/* Get a value v from a specific tape entry with index idx */
-extern void ampi_get_val(void* buf, int* i, double* v);
-
-/* Get a value v from a specific tape variable buf[i] */
-extern void ampi_set_val(void* buf, int* i, double* v);
-
-/* Get an adjoint a from a specific tape entry with index idx */
-extern void ampi_get_adj(INT64* idx, double* a);
-
-/* Set an adjoint a from a specific tape entry with index idx */
-extern void ampi_set_adj(INT64*, double*);
-
-/* Get a tape index from a variable buf[i] */
-extern void ampi_get_idx(void* buf, int* i, INT64* idx);
-
-/* Create a tape entry in the external tape, indicating an external AMPI call */
-extern void ampi_create_tape_entry(long int* i);
-
-/* Create size tape entries to store the values of buf. Refer to receive buffer without
- * initialization */
-extern void ampi_create_dummies(void* buf, int *size);
 #endif

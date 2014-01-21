@@ -39,7 +39,9 @@ int AMPI_Finalize() {
 }
 
 int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm) {
-
+    if(datatype!=AMPI_DOUBLE) {
+      return MPI_Send(buf, count, datatype, dest, tag, comm);
+    }
     int i=0;
     double * tmp = (double*) malloc(sizeof(double)*count);
     ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*2);
@@ -71,6 +73,9 @@ int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 }
 
 int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status) {
+    if(datatype!=AMPI_DOUBLE) {
+      return MPI_Recv(buf, count, datatype, dest, tag, comm, status);
+    }
 
     int i=0;
     double * tmp = (double*) malloc(sizeof(double)*count);
@@ -109,6 +114,9 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 }
 
 int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+    if(datatype!=AMPI_DOUBLE) {
+      return MPI_Isend(buf, count, datatype, dest, tag, comm, mpi_request);
+    }
     int i=0;
     /*new AMPI request*/
     AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
@@ -161,6 +169,9 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 }
 
 int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+    if(datatype!=AMPI_DOUBLE) {
+      return MPI_Irecv(buf, count, datatype, dest, tag, comm, mpi_request);
+    }
     int i=0;
     AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     /*INT64 tmp_int64 = 0;*/
@@ -281,7 +292,9 @@ int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Sta
     return MPI_Waitany(count,array_of_requests,index,status);
 }
 int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm) {
-
+    if(datatype!=AMPI_DOUBLE) {
+      return MPI_Bcast(buf, count, datatype, root, comm);
+    }
     int rank=0;
     int i=0;
     double * tmp = (double*) malloc(sizeof(double)*count);
@@ -324,7 +337,9 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
 }
 
 int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm) {
-
+    if(datatype!=AMPI_DOUBLE) {
+      MPI_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
+    }
     int i=0;
     double * tmp_send = (double*) malloc(sizeof(double)*count);
     double * tmp_recv = (double*) malloc(sizeof(double)*count);
@@ -384,7 +399,9 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 }
 
 int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm) {
-
+    if(datatype!=AMPI_DOUBLE) {
+      MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+    }
     int i=0;
     double * tmp_send = (double*) malloc(sizeof(double)*count);
     double * tmp_recv = (double*) malloc(sizeof(double)*count);
@@ -443,6 +460,9 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 }
 
 int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
+  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+    return MPI_Scatter(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
+  }
   int i=0;
   int size=0;
   MPI_Comm_size(comm,&size);
@@ -488,6 +508,9 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 }
 
 int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
+  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+    return MPI_Scatterv(sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm);
+  }
     int i=0;
     int size=0;
     int rank=0;
@@ -539,6 +562,9 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
 }
 
 int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
+  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+    return MPI_Gather(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
+  }
   int i=0;
   int size=0;
   MPI_Comm_size(comm,&size);
@@ -585,6 +611,9 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
 }
 
 int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int *recvcnts, int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm) {
+  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+    return MPI_Gatherv(sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm);
+  }
     int i=0;
     int size=0;
     int rank=0;
@@ -632,6 +661,9 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 }
 
 int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+  if(datatype!=AMPI_DOUBLE) {
+    return MPI_Recv_init(buf, count, datatype, source, tag, comm, mpi_request);
+  }
     AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
     ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int)*2);
@@ -650,6 +682,9 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
     return 0;
 }
 int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+  if(datatype!=AMPI_DOUBLE) {
+    return MPI_Send_init(buf, count, datatype, dest, tag, comm, mpi_request);
+  }
     AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
     ampi_tape[ampi_vac].arg=(int*) malloc(sizeof(int)*2);
@@ -668,6 +703,9 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
     return 0;
 }
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status) {
+  if(datatype!=AMPI_DOUBLE) {
+    return MPI_Sendrecv_replace(buf, count, datatype, dest, sendtag, source, recvtag, comm, status);
+  }
     int i=0;
     double * tmp = (double*) malloc(sizeof(double)*count);
     ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*2);
