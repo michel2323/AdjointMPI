@@ -76,6 +76,11 @@ int main(int argc, char* argv[]) {
     d1_b0_u[i]=new double[n];
     d1_b0_us[i]=new double[n];
   }
+  for(int i=0;i<nx;i++) 
+    for(int j=0;j<n;j++) { 
+      d1_b0_us[i][j]=0;
+      b0_us[i][j]=0;
+    }
   d1_b0_ui=new double[nx];
   d1_b0_buf=new double[1];
   ofstream soadm_out;
@@ -149,9 +154,15 @@ int main(int argc, char* argv[]) {
 	      buf, d1_buf, b0_buf, d1_b0_buf);
     for (int i=0;i<nx;i++) H[j][i]=d1_b0_ui[i];
   }
-  for (int j=0;j<nx;j++) 
-    for (int i=0;i<nx;i++) 
-      soadm_out << "H[" << j << "," << i << "]=" << H[j][i] <<endl;
+  double *res=new double[nx];
+  for (int j=0;j<nx;j++) res[j]=0; 
+  for (int j=0;j<nx;j++) { 
+    MPI_Reduce(H[j],res,nx,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+    if(myid==0)
+      for (int i=0;i<nx;i++) 
+	soadm_out << "H[" << j << "," << i << "]=" << res[i] <<endl;
+  }
+  delete [] res;
 
   // deallocate
  

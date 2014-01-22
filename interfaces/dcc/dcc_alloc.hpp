@@ -21,7 +21,7 @@ using namespace std;
     ////stac< data;
     //int size;
     //vector<double> data;
-    ////vector<double> b1_data;
+    ////vector<double> a1_data;
     //double *hash;
     //double *depth;
 //};
@@ -38,17 +38,17 @@ void print_num(double &num);
 
 // Buffer allocation
 
-void a1_dcc_new(int bmode, double *&buf, double *&b1_buf, int &size);
-void a1_dcc_delete(int bmode, double *&buf, double *&b1_buf);
+void a1_dcc_new(int bmode, double *&buf, double *&a1_buf, int &size);
+void a1_dcc_delete(int bmode, double *&buf, double *&a1_buf);
 
-void a1_print_num(int bmode, double &num, double &b1_num);
+void a1_print_num(int bmode, double &num, double &a1_num);
 
 // Forward over Reverse
 
 // Buffer allocation
 
-void t2_a1_dcc_new(int bmode, double *&buf, double *&d2_buf, double *&b1_buf, double *&d2_b1_buf, int &size);
-void t2_a1_dcc_delete(int bmode, double *&buf, double *&d2_buf, double *&b1_buf, double *&d2_b1_buf);
+void t2_a1_dcc_new(int bmode, double *&buf, double *&t2_buf, double *&a1_buf, double *&t2_a1_buf, int &size);
+void t2_a1_dcc_delete(int bmode, double *&buf, double *&t2_buf, double *&a1_buf, double *&t2_a1_buf);
 
-void t2_a1_print_num(int bmode, double &num, double &d2_num, double &b1_num, double &d2_b1_num);
+void t2_a1_print_num(int bmode, double &num, double &t2_num, double &a1_num, double &t2_a1_num);
 #endif 

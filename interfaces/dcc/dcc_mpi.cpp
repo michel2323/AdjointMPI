@@ -1,17 +1,21 @@
 #include "dcc_mpi.hpp"
+#include <cassert>
+#include <iostream>
 
 using namespace std;
 
+#define STACK_SIZE 200 
+
 // Request stacks
 
-MPI_Request mpi_rst[200];
+MPI_Request mpi_rst[STACK_SIZE];
 int mpi_rstc = 0;
 
-AMPI_Request ampi_rst[200];
+AMPI_Request ampi_rst[STACK_SIZE];
 int ampi_rstc = 0;
 
-double *buf_ampi_rst[200];
-double **ptr_buf_ampi_rst[200];
+double *buf_ampi_rst[STACK_SIZE];
+double **ptr_buf_ampi_rst[STACK_SIZE];
 
 // DUMMY MPI CALLS FOR DCC ADAPTATION
 
@@ -46,30 +50,36 @@ void print_num(double &num) {
 
 // Communication
 
-void a1_MPI_Irecv(int bmode, double * buf, double *&b1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
+void a1_MPI_Irecv(int bmode, double * buf, double *&a1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
     int ierr=0;
     if(bmode == 2) {
         *request = ampi_rstc;
+	ampi_rst[ampi_rstc].request=(MPI_Request*) malloc(sizeof(MPI_Request));
 	ierr = AMPI_Irecv_f( buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
-	ptr_buf_ampi_rst[ampi_rstc] = &b1_buf;
+	ptr_buf_ampi_rst[ampi_rstc] = &a1_buf;
         ampi_rstc++;
+	assert(ampi_rstc<STACK_SIZE);
     }
     if(bmode == 1) {
-	ierr = AMPI_Irecv_b( b1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	ierr = AMPI_Irecv_b( a1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	free(ampi_rst[*request].request);
 	*request = *request - 1;
     }
 }
 
-void a1_MPI_Isend(int bmode, double * buf, double *&b1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
+void a1_MPI_Isend(int bmode, double * buf, double *&a1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
     int ierr=0;
     if(bmode == 2) {
         *request = ampi_rstc;
+	ampi_rst[ampi_rstc].request=(MPI_Request*) malloc(sizeof(MPI_Request));
 	ierr = AMPI_Isend_f( buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
-	ptr_buf_ampi_rst[ampi_rstc] = &b1_buf;
+	ptr_buf_ampi_rst[ampi_rstc] = &a1_buf;
         ampi_rstc++;
+	assert(ampi_rstc<STACK_SIZE);
     }
     if(bmode == 1) {
-	ierr = AMPI_Isend_b( b1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	ierr = AMPI_Isend_b( a1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	free(ampi_rst[*request].request);
 	*request = *request - 1;
     }
 }
@@ -86,7 +96,7 @@ void a1_MPI_Wait(int bmode, int *request, int *status) {
     }
 }
 
-void a1_MPI_Reduce(int bmode, double *sendbuf, double *b1_sendbuf, double *recvbuf, double *b1_recvbuf, int &nelements, int &ampi_double, int &op, int &root, int &ampi_comm) {
+void a1_MPI_Reduce(int bmode, double *sendbuf, double *a1_sendbuf, double *recvbuf, double *a1_recvbuf, int &nelements, int &ampi_double, int &op, int &root, int &ampi_comm) {
     if(bmode == 2) {
 	if(op == AMPI_SUM)
 	    AMPI_Reduce_f(sendbuf, recvbuf, nelements, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
@@ -95,9 +105,9 @@ void a1_MPI_Reduce(int bmode, double *sendbuf, double *b1_sendbuf, double *recvb
     }
     if(bmode == 1) {
 	if(op == AMPI_SUM)
-	    AMPI_Reduce_b(b1_sendbuf, b1_recvbuf, nelements, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+	    AMPI_Reduce_b(a1_sendbuf, a1_recvbuf, nelements, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
 	if(op == AMPI_PROD)
-	    AMPI_Reduce_b(b1_sendbuf, b1_recvbuf, nelements, MPI_DOUBLE, MPI_PROD, root, MPI_COMM_WORLD);
+	    AMPI_Reduce_b(a1_sendbuf, a1_recvbuf, nelements, MPI_DOUBLE, MPI_PROD, root, MPI_COMM_WORLD);
     }
 }
 
@@ -105,37 +115,49 @@ void a1_MPI_Reduce(int bmode, double *sendbuf, double *b1_sendbuf, double *recvb
 
 // Communication
 
-void t2_a1_MPI_Irecv(int bmode, double * buf, double * d2_buf, double *&b1_buf, double *&d2_b1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
+void t2_a1_MPI_Irecv(int bmode, double * buf, double * t2_buf, double *&a1_buf, double *&t2_a1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
     int ierr=0;
     if(bmode == 2) {
         *request = ampi_rstc;
+	ampi_rst[ampi_rstc].request=(MPI_Request*) malloc(sizeof(MPI_Request));
 	ierr = AMPI_Irecv_f( buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
-	ptr_buf_ampi_rst[ampi_rstc] = &b1_buf;
+	ptr_buf_ampi_rst[ampi_rstc] = &a1_buf;
         ampi_rstc++;
-	ierr = AMPI_Irecv_f( d2_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
-	ptr_buf_ampi_rst[ampi_rstc] = &d2_b1_buf;
+	assert(ampi_rstc<STACK_SIZE);
+	ampi_rst[ampi_rstc].request=(MPI_Request*) malloc(sizeof(MPI_Request));
+	ierr = AMPI_Irecv_f( t2_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
+	ptr_buf_ampi_rst[ampi_rstc] = &t2_a1_buf;
 	ampi_rstc++;
+	assert(ampi_rstc<STACK_SIZE);
     }
     if(bmode == 1) {
-	ierr = AMPI_Irecv_b( d2_b1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request+1]);
-	ierr = AMPI_Irecv_b( b1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	ierr = AMPI_Irecv_b( t2_a1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request+1]);
+	free(ampi_rst[*request+1].request);
+	ierr = AMPI_Irecv_b( a1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	free(ampi_rst[*request].request);
     }
 }
 
-void t2_a1_MPI_Isend(int bmode, double * buf, double * d2_buf, double *&b1_buf, double *&d2_b1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
+void t2_a1_MPI_Isend(int bmode, double * buf, double * t2_buf, double *&a1_buf, double *&t2_a1_buf, int &nelements, int &ampi_double, int &target, int &tag, int &ampi_comm, int *request) {
     int ierr=0;
     if(bmode == 2) {
 	*request=ampi_rstc;
+	ampi_rst[ampi_rstc].request=(MPI_Request*) malloc(sizeof(MPI_Request));
 	ierr = AMPI_Isend_f( buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
-	ptr_buf_ampi_rst[ampi_rstc] = &b1_buf;
+	ptr_buf_ampi_rst[ampi_rstc] = &a1_buf;
         ampi_rstc++;
-	ierr = AMPI_Isend_f( d2_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
-	ptr_buf_ampi_rst[ampi_rstc] = &d2_b1_buf;
+	assert(ampi_rstc<STACK_SIZE);
+	ampi_rst[ampi_rstc].request=(MPI_Request*) malloc(sizeof(MPI_Request));
+	ierr = AMPI_Isend_f( t2_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[ampi_rstc]);
+	ptr_buf_ampi_rst[ampi_rstc] = &t2_a1_buf;
 	ampi_rstc++;
+	assert(ampi_rstc<STACK_SIZE);
     }
     if(bmode == 1) {
-	ierr = AMPI_Isend_b( d2_b1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request+1]);
-	ierr = AMPI_Isend_b( b1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	ierr = AMPI_Isend_b( t2_a1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request+1]);
+	free(ampi_rst[*request+1].request);
+	ierr = AMPI_Isend_b( a1_buf, nelements, MPI_DOUBLE, target, 0, MPI_COMM_WORLD, &ampi_rst[*request]);
+	free(ampi_rst[*request].request);
     }
 }
 
@@ -154,31 +176,31 @@ void t2_a1_MPI_Wait(int bmode, int *request, int *status) {
     }
 }
 
-void t2_a1_MPI_Reduce(int bmode, double *sendbuf, double *d2_sendbuf, double *b1_sendbuf, double *d2_b1_sendbuf, double *recvbuf, double *d2_recvbuf, double *b1_recvbuf, double *d2_b1_recvbuf, int &nelements, int &ampi_double, int &op, int &root, int &ampi_comm) {
+void t2_a1_MPI_Reduce(int bmode, double *sendbuf, double *t2_sendbuf, double *a1_sendbuf, double *t2_a1_sendbuf, double *recvbuf, double *t2_recvbuf, double *a1_recvbuf, double *t2_a1_recvbuf, int &nelements, int &ampi_double, int &op, int &root, int &ampi_comm) {
     if(bmode == 2) {
 	AMPI_Reduce_f(sendbuf, recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
-	AMPI_Reduce_f(d2_sendbuf, d2_recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
+	AMPI_Reduce_f(t2_sendbuf, t2_recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
     }
     if(bmode == 1) {
-	AMPI_Reduce_b(d2_b1_sendbuf, d2_b1_recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
-	AMPI_Reduce_b(b1_sendbuf, b1_recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
+	AMPI_Reduce_b(t2_a1_sendbuf, t2_a1_recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
+	AMPI_Reduce_b(a1_sendbuf, a1_recvbuf, nelements, MPI_DOUBLE, MPI_SUM , root, MPI_COMM_WORLD);
     }
 }
 
-void a1_print_num(int bmode, double &num, double &b1_num) {
+void a1_print_num(int bmode, double &num, double &a1_num) {
     if(bmode == 2)
 	cout << "num: " << num << endl;
     if(bmode == 1)
-	cout << "b1_num: " << b1_num << endl;
+	cout << "a1_num: " << a1_num << endl;
 }
 
-void t2_a1_print_num(int bmode, double &num, double &d2_num, double &b1_num, double &d2_b1_num) {
+void t2_a1_print_num(int bmode, double &num, double &t2_num, double &a1_num, double &t2_a1_num) {
     if(bmode == 2) {
 	cout << "num: " << num << endl;
-	cout << "d2_num: " << d2_num << endl;
+	cout << "t2_num: " << t2_num << endl;
     }
     if(bmode == 1) {
-	cout << "b1_num: " << b1_num << endl;
-	cout << "d2_b1_num: " << d2_b1_num << endl;
+	cout << "a1_num: " << a1_num << endl;
+	cout << "t2_a1_num: " << t2_a1_num << endl;
     }
 }

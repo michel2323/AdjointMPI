@@ -3,8 +3,8 @@
 
 
 void alloc(double *myres, int &size, double *x) 
-//$ad indep x 
-//$ad dep myres 
+#pragma ad indep x 
+#pragma ad dep myres 
 {
     int i=0;
     double *buf;

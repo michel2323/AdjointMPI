@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
 	    b0_u[j1][j2]=0; 
 	    ub[j1][j2]=0; 
 	    b0_ub[j1][j2]=0; 
+	    b0_us[j1][j2]=0;
 	}
     }
     if(myid == 0)
@@ -79,7 +80,11 @@ int main(int argc, char* argv[]) {
     a1_f(bmode0, nx, n, cost, b0_cost, uob, b0_uob, ub, b0_ub, us, b0_us, u, b0_u, 
 	    ui, b0_ui, dx, b0_dx, dt, b0_dt, r, b0_r, dtdx, b0_dtdx, 
 	    c0, b0_c0, c1, b0_c1, buf, b0_buf);
-    for (int i=0;i<nx;i++) adm_out << "g[" << i << "]=" << b0_ui[i] <<endl;
+    double *res=new double[nx];
+    MPI_Reduce(b0_ui, res, nx, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD); 
+    if(myid==0)
+      for (int i=0;i<nx;i++) adm_out << "g[" << i << "]=" << res[i] <<endl;
+    delete [] res;
 
     for (int i=0;i<nx;i++) {
 	delete [] b0_uob[i];

@@ -21,8 +21,8 @@ void f(int& nx, // number of grid points
        double& c1,
        double* buf // MPI buffer
 )
-//$ad indep ui
-//$ad dep cost
+#pragma ad indep ui
+#pragma ad dep cost
 
 {
     // MPI
