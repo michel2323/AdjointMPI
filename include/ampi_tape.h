@@ -14,15 +14,34 @@
  * communication. 
  */
 
+/** \def AMPI_DOUBLE
+ * Sets the active MPI type. If all buffers of type MPI_DOUBLE should be
+ * communicated actively, set this to MPI_DOUBLE
+ */
 #define AMPI_DOUBLE MPI_DOUBLE
-#define AMPI_CHUNK_SIZE 500000
-#define ASSERT 
 
+/**
+ * \def AMPI_CHUNK_SIZE
+ * Sets the chunk size of the AMPI tape. When the tape exceeds this size, a new
+ * chunk is allocated.
+ */
+#define AMPI_CHUNK_SIZE 500000
+
+
+/**
+ * @{
+ * \name Internal defines for the reduction operation
+ */
 #define REDUCE_ADD 1
 #define REDUCE_MUL 2
 #define REDUCE_MIN 3
 #define REDUCE_MAX 4
+/**@}*/
 
+/**
+ * @{
+ * \name Internal defines for the MPI communications
+ */
 #define SEND 1
 #define RECV 2
 #define ISEND 3
@@ -44,6 +63,7 @@
 #define RECV_INIT 19
 #define START 20
 #define STARTALL 21
+/**@}*/
 
 #include <stdlib.h>
 #include <assert.h>
@@ -53,7 +73,6 @@
 /*int ampi_vac=0;*/
 
 /** 
- * \struct 
  * The UT_hash hash table is used to link the MPI_Request to an active
  * AMPI_Request when dealing with an overloading AD tool. This struct defines
  * the hash table data structure.  
@@ -61,7 +80,6 @@
  * See further
  * documentation at http://troydhanson.github.io/uthash/index.html
  */
-
 typedef struct {
   void *key; /**< Pointer to the MPI_Request */
   AMPI_Request request; /**< The active AMPI_Request*/ 
@@ -111,46 +129,143 @@ int AMPI_Finalize();
 /**
  * @brief Active blocking send with active buffer.
  *
- * @param buf Active buffer pointer.
+ * @param buf Pointer to active buffer.
  *
  */
 int AMPI_Send(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
 /**
- * @brief Active blocking send with active buffer.
+ * @brief Active blocking receive with active buffer.
  *
- * @param buf Active buffer pointer.
+ * @param buf Pointer to active buffer.
  *
  */
 int AMPI_Recv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Status* status);
 
+/**
+ * @brief Active non blocking send with active buffer.
+ *
+ * @param buf Pointer to active buffer.
+ */
 int AMPI_Isend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request* request);
+
+/**
+ * @brief Active non blocking receive with active buffer.
+ *
+ * @param buf Pointer to active buffer.
+ *
+ */
 int AMPI_Irecv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Request* request);
 
+/**
+ * @brief Active wait. If the MPI_Request is in the hash table, the communication is active.
+ *
+ */
 int AMPI_Wait(MPI_Request *, MPI_Status *);
+
+/**
+ * @brief Active waitall. If the MPI_Request is in the hash table, the
+ * communication is active, otherwise only MPI_Wait is called.
+ *
+ */
 int AMPI_Waitall(int , MPI_Request *, MPI_Status *);
+
+/**
+ * @brief Active waitall. If the MPI_Request is in the hash table, the
+ * communication is active, otherwise only MPI_Wait is called. If no requests
+ * are left, MPI_Waitany is called one last time to set the MPI library's
+ * handlers correctly.
+ *
+ */
 int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status);
+
+/**
+ * Experimental implementation of an anti-waitall. See the corresponding paper
+ * for more information.
+ */
 int AMPI_Awaitall(int , AMPI_Request *, MPI_Status *);
 
+
+/**
+ * @brief Active broadcast. 
+ *
+ * @param buf Pointer to active buffer.
+ */
 int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
+
+/**
+ * @brief Active reduce. 
+ *
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
+ */
 int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm);
+
+/**
+ * @brief Active allreduce. 
+ *
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
+ */
 int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+
+/**
+ * @brief Active scatter. 
+ *
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
+ */
 int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
+
+/**
+ * @brief Active gather. 
+ *
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
+ */
 int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
 
+/**
+ * @brief Active receive init. The active AMPI_Requests
+ * are registered. MPI_Recv_init is _not_ executed in AMPI. See AMPI_Start.
+ *
+ * @param buf Pointer to active receive buffer.
+ */
 int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
+
+/**
+ * @brief Active receive init. The active AMPI_Requests
+ * are registered. MPI_Send_init is _not_ executed in AMPI. See AMPI_Start.
+ *
+ * @param buf Pointer to active send buffer.
+ */
 int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request);
+
+/** @brief Active start. Call AMPI_Isend or AMPI_Irecv for active request
+ *
+ */
 int AMPI_Start(MPI_Request *request);
+
+/** @brief Active startall. Call AMPI_Start count times
+ *
+ */
 int AMPI_Startall(int count, MPI_Request array_of_requests[]);
 
+/** @brief Active sendrecv with replace. 
+ *
+ * @param buf Pointer to active buf.
+ */
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
-/* AMPI routines that have to be called by the external tape */
 
-
-/* Call AMPI tape printer from external tape printer */
+/** Call AMPI tape printer from external tape printer */
 void ampi_print_tape(void);
-/* Call AMPI tape printer from external tape printer for one tape entry */
-void ampi_print_tape_entry(int *j);
+
+/** Call AMPI tape printer from external tape printer for one tape entry */
+void ampi_print_tape_entry(int *j); 
+
+/** Check whether the tape size is larger than size. If not, a reallocation is
+ * triggered with an additional chunk.
+ */
 void ampi_check_tape_size(long int size);
 
 #endif

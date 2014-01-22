@@ -1,6 +1,5 @@
 The AMPI library is used to reverse MPI communication in the context of algorithmic
 differentiation (AD). In principal, the reversal may be used for other purposes.
-Unfortunately, some adjoint differentiation operations are hardcoded e.g. for MPI_Reduce.
 
 Source Files
 ----------

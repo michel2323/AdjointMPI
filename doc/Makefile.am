@@ -1,7 +1,8 @@
 if HAVE_DOXYGEN
 
 doxyfile.stamp:
-	doxygen Doxyfile.in
+	@echo "Generating documentation using doxygen..."
+	doxygen Doxyfile.in >& doxygen.log
 	echo Timestamp > doxyfile.stamp
 
 CLEANFILES = doxyfile.stamp

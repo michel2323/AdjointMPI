@@ -9,13 +9,13 @@
 
 int * AMPI_myid;
 /* Stack to compute the adjoints of the MPI reduce operation */
-ampi_stack reduce_stack;
+ampi_stack ampi_reduce_stack;
 
 /* Non communication routines (Init, Finalize...)*/
 
 int AMPI_Init_f(int *argc, char ***argv) {
     int ierr;
-    stack_init(&reduce_stack);
+    AMPI_stack_init(&ampi_reduce_stack);
     ierr=MPI_Init(argc, argv);
     return ierr;
 }
@@ -290,11 +290,11 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
     if(op == MPI_PROD)  {
 	recvbuf_tmp=(double*) malloc(sizeof(double)*count);
 	for(i=0; i<count ; i=i+1) {
-	    push(&reduce_stack,sendbuf[i]);
+	    AMPI_push(&ampi_reduce_stack,sendbuf[i]);
 	}
 	MPI_Allreduce(sendbuf, recvbuf_tmp, count, datatype, op, comm);
 	for(i=0; i<count; i=i+1)
-	    push(&reduce_stack,recvbuf_tmp[i]);
+	   AMPI_push(&ampi_reduce_stack,recvbuf_tmp[i]);
 	if(myid==root) {
 	    for(i=0; i<count; i=i+1) {
 		recvbuf[i]=recvbuf_tmp[i];
@@ -327,7 +327,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 	else
 	    MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MINLOC, comm);
 	for(i=0; i<count; i=i+1) {
-	    push(&reduce_stack,(double) recvtupel[i].j);
+	   AMPI_push(&ampi_reduce_stack,(double) recvtupel[i].j);
 	}
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 	if(myid==root) {
@@ -356,10 +356,10 @@ int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 	    r =(double*) malloc(sizeof(double)*count);
 	    MPI_Bcast(recvbuf, count, datatype, root, comm);
 	    for(i=count-1 ; i>=0 ; i=i-1) {
-		r[i] = pop(&reduce_stack);
+		r[i] = AMPI_pop(&ampi_reduce_stack);
 	    }
 	    for(i=count-1 ; i>=0 ; i=i-1) {
-		s[i] = pop(&reduce_stack);
+		s[i] = AMPI_pop(&ampi_reduce_stack);
 	    }
 	    for(i=0; i<count; i=i+1) {
 		s_d[i] = recvbuf[i];
@@ -397,7 +397,7 @@ int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 	MPI_Bcast(recvbuf, count, datatype, root, comm);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
 	for(i=count-1;i>=0;i--) {
-	    idx=(int)pop(&reduce_stack);
+	    idx=(int)AMPI_pop(&ampi_reduce_stack);
 	    if(myid!=idx)
 		sendbuf[i]=0;
 	    else {
@@ -416,12 +416,12 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     AMPI_Tupel *recvtupel=0;
     if(op == MPI_PROD || op == MPI_SUM) {
 	for(i=0; i<count ; i=i+1) {
-	    push(&reduce_stack,sendbuf[i]);
+	    AMPI_push(&ampi_reduce_stack,sendbuf[i]);
 	}
 
 	MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
 	for(i=0; i<count; i=i+1)
-	    push(&reduce_stack,recvbuf[i]);
+	    AMPI_push(&ampi_reduce_stack,recvbuf[i]);
 	return MPI_SUCCESS;
     }
     if(op == MPI_MIN || op == MPI_MAX) {
@@ -437,7 +437,7 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 	else
 	    MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MINLOC, comm);
 	for(i=0; i<count; i=i+1) {
-	    push(&reduce_stack,(double) recvtupel[i].j);
+	    AMPI_push(&ampi_reduce_stack,(double) recvtupel[i].j);
 	}
 	for(i=0; i<count; i=i+1) {
 	    recvbuf[i]=recvtupel[i].v;
@@ -498,10 +498,10 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     s_d = (double*) malloc(sizeof(double)*count);
     r = (double*) malloc(sizeof(double)*count);
     for(i=count-1 ; i>=0 ; i=i-1) {
-      r[i] = pop(&reduce_stack);
+      r[i] = AMPI_pop(&ampi_reduce_stack);
     }
     for(i=count-1 ; i>=0 ; i=i-1) {
-      s[i] = pop(&reduce_stack);
+      s[i] = AMPI_pop(&ampi_reduce_stack);
     }
     for(i=0; i<count; i=i+1) {
       s_d[i] = recvbuf[i];
@@ -542,7 +542,7 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 #endif
       MPI_Allreduce(recvbuf, minmaxbuf_tmp, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       for(i=count-1;i>=0;i--) {
-	idx=(int)pop(&reduce_stack);
+	idx=(int)AMPI_pop(&ampi_reduce_stack);
 	if(myid==idx) {
 	  sendbuf[i]=minmaxbuf_tmp[i];
 	}
