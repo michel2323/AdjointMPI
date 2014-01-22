@@ -1,1 +1,1 @@
-../../interfaces/dcc_alloc.cpp
+../../interfaces/dcc/dcc_alloc.cpp

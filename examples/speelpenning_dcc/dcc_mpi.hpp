@@ -1,1 +1,1 @@
-../../interfaces/dcc_mpi.hpp
+../../interfaces/dcc/dcc_mpi.hpp

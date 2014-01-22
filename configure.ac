@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([1.0])
-AC_INIT([libAMPI], [0.2], [schanen@stce.rwth-aachen.de])
+AC_INIT([libAMPI], [1.0], [schanen@stce.rwth-aachen.de])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror])
