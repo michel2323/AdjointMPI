@@ -7,7 +7,6 @@ AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([-Wall -Werror])
 #m4_pattern_allow([AM_PROG_AR])
-#AM_PROG_AR
 #AM_PROG_AR([act-if-fail])
 
 # Checks for programs.
@@ -61,4 +60,5 @@ fi
 AM_CONDITIONAL([HAVE_DOXYGEN],
 [test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN],
 [AC_CONFIG_FILES([doc/Doxyfile])])
+AM_PROG_AR
 AMPI_REPORT
