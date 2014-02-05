@@ -18,6 +18,9 @@ AC_LANG([C])
 AC_OPENMP
 AC_HEADER_STDC
 
+AM_PROG_AR
+
+
 AC_CHECK_LIB([m], [sqrt],,AC_MSG_ERROR(Could not find -lm libary.))
 AC_LANG([C])
 AC_LANG([C++])
@@ -60,5 +63,4 @@ fi
 AM_CONDITIONAL([HAVE_DOXYGEN],
 [test -n "$DOXYGEN"])AM_COND_IF([HAVE_DOXYGEN],
 [AC_CONFIG_FILES([doc/Doxyfile])])
-AM_PROG_AR
 AMPI_REPORT
