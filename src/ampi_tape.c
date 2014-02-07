@@ -596,7 +596,10 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
   MPI_Comm_size(comm,&size);
   MPI_Comm_rank(comm,&rank);
   double * tmp_send = (double*)malloc(sizeof(double)*sendcnt);
-  double * tmp_recv = (double*)malloc(sizeof(double)*recvcnt*size);
+  double * tmp_recv = 0;
+  if(rank == root) {
+	  tmp_recv = (double*)malloc(sizeof(double)*recvcnt*size);
+  }
 
   /* check for size */
   int recvSize=recvcnt*size;
@@ -645,7 +648,9 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
 
   ampi_vac+=bufferSize;
   free(tmp_send);
-  free(tmp_recv);
+  if( rank == root ) {
+    free(tmp_recv);
+  }
   return 0;
 
 }
@@ -1078,8 +1083,9 @@ void ampi_interpret_tape(){
 			 MPI_Comm_size(comm,&size);
 			 MPI_Comm_rank(comm,&rank);
 			 double *sendbuf=(double*)malloc(sizeof(double)*csend);
-			 double *recvbuf=recvbuf = (double*)malloc(sizeof(double)*crecv*size);
+			 double *recvbuf=NULL;
 			 if(rank == root) {
+				 recvbuf = (double*)malloc(sizeof(double)*crecv*size);
 				 for(j=0;j<crecv*size;j++) {
 				   ampi_get_adj(&ampi_tape[i+1+j].idx,&recvbuf[j]);
 				 }
@@ -1090,8 +1096,10 @@ void ampi_interpret_tape(){
 			   ampi_set_adj(&ampi_tape[i-csend+j].idx,&sendbuf[j]);
 			 }
 			 free(sendbuf);
-		         free(recvbuf);
-			 break;
+			 if(rank == root) {
+				 free(recvbuf);
+			 }
+			   break;
 		       }
 	case GATHERV : {
 			   break;
