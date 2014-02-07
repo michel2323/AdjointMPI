@@ -70,6 +70,18 @@ extern "C" {
     } 
   }
   
+  int ampi_is_tape_active () {
+    if (NULL != global_tape) {
+#ifdef DCO_ALLOW_TAPE_SWITCH_OFF
+      return global_tape->is_active();
+#else
+      return 1;
+#endif
+    } else {
+      return 0;
+    }
+  }
+
   //     const int n=*size;
 //     type *actives=static_cast<type*>(buf);
 

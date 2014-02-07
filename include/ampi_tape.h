@@ -27,15 +27,14 @@
  */
 #define AMPI_CHUNK_SIZE 500000
 
-
 /**
  * @{
  * \name Internal defines for the reduction operation
  */
-#define REDUCE_ADD 1
-#define REDUCE_MUL 2
-#define REDUCE_MIN 3
-#define REDUCE_MAX 4
+#define AMPI_REDUCE_ADD 1
+#define AMPI_REDUCE_MUL 2
+#define AMPI_REDUCE_MIN 3
+#define AMPI_REDUCE_MAX 4
 /**@}*/
 
 /**
@@ -107,6 +106,9 @@ typedef struct ampi_tape_entry {
  * @return error code
  */
 int AMPI_Reset_Tape();
+
+int AMPI_Store_State();
+int AMPI_Restore_State();
 
 /**
  * Initialize AMPI consisting of allocating the AMPI tape and calling AMPI_Init_f
