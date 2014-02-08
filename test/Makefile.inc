@@ -1,11 +1,9 @@
 INDENTATION_OK=@echo " -> OK "
 
-ifndef MPICC
 MPICC=mpicc
-endif
 
-ifndef MPICXX
 MPICXX=mpicxx
-endif
+
+MPIEXEC=mpiexec
 
 AMPI_DIR=../../

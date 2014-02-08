@@ -3,7 +3,7 @@ TESTS=$(shell find . -type d)
 TEST_DIR=.
 
 check: 
-	for i in $(TESTS); do if [ $$i != "." ]; then cd ${TEST_DIR}/$$i && echo -n $$i && make check && cd ..; fi; done
+	for i in `ls -l | egrep '^d'  | awk ' { print $$9 } '` ; do cd $$i && make check && cd .. ; done
 
 clean: 
-	for i in $(TESTS); do if [ $$i != "." ]; then cd ${TEST_DIR}/$$i && make clean && cd ..; fi; done
+	for i in `ls -l | egrep '^d'  | awk ' { print $$9 } '` ; do cd $$i && make clean && cd .. ; done
