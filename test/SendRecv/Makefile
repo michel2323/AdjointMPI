@@ -41,7 +41,7 @@ ampi_interface.o: ampi_interface.cpp
 
 clean: 
 	rm -f *.out* driver fdDriver ampiDriver *.o 
-check:  default
+check:  all
 	@echo "SendRecv test..."
 	cat driver.out* fdDriver.out* ampiDriver.out* > test.out
 	diff test.out all_ok.check	

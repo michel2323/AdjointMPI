@@ -1,5 +1,3 @@
-TESTS=$(shell find . -type d)
-
 TEST_DIR=.
 
 check: 

@@ -7,36 +7,42 @@ DCO_BUILD=$(DCO_BASE_DIR)/build/dco_cpp
 
 CXXFLAGS=-g  -O0 -I$(DCO_BUILD)/include -L$(DCO_BUILD)/lib -fopenmp
 
-default: driver.out fdDriver.out ampiDriver.out
+all: driver.out fdDriver.out ampiDriver.out
 
-driver.out : driver
-	mpiexec --output-filename $@ -n $(NPROC)  ./$< $(PSIZE)
+driver.out: driver
+	${MPIEXEC} --output-filename driver.out -n $(NPROC)  ./driver $(PSIZE)
 
-fdDriver.out : fdDriver
-	mpiexec --output-filename $@ -n $(NPROC)  ./$< $(PSIZE)
+fdDriver.out: fdDriver
+	${MPIEXEC} --output-filename fdDriver.out -n $(NPROC)  ./fdDriver $(PSIZE)
 
-ampiDriver.out : ampiDriver
-	mpiexec --output-filename $@ -n $(NPROC) ./$< $(PSIZE)
+ampiDriver.out: ampiDriver
+	${MPIEXEC} --output-filename ampiDriver.out -n $(NPROC) ./ampiDriver $(PSIZE)
 
-driver: driver.cpp
-	${MPICXX} $(CXXFLAGS) -o $@ $^ -lm
+driver: driver.o
+	${MPICXX} $(CXXFLAGS) -o $@ driver.o -lm
 
-fdDriver: fdDriver.cpp
-	${MPICXX} $(CXXFLAGS) -o $@ $^ -lm
+driver.o: driver.cpp 
+	${MPICXX} $(CXXFLAGS) -c -o $@ driver.cpp 
 
-ampiDriver.o: ampiDriver.cpp
-	$(MPICXX) $(CXXFLAGS) -I$(AMPI_DIR)/include -c -o $@ $^
+fdDriver: fdDriver.o
+	${MPICXX} $(CXXFLAGS) -o $@ fdDriver.o -lm
 
-ampi_interface.o: ampi_interface.cpp
-	$(MPICXX) $(CXXFLAGS) -I$(AMPI_DIR)/include -c -o $@ $^
+fdDriver.o: fdDriver.cpp 
+	${MPICXX} $(CXXFLAGS) -c -o $@ fdDriver.cpp 
 
 ampiDriver: ampiDriver.o ampi_interface.o
-	$(MPICXX) $(CXXFLAGS) -o $@ $^ -ldco $(AMPI_DIR)/src/libAMPI.a
+	$(MPICXX) $(CXXFLAGS) -o $@ ampiDriver.o ampi_interface.o -ldco $(AMPI_DIR)/src/libAMPI.a
+
+ampiDriver.o: ampiDriver.cpp
+	$(MPICXX) $(CXXFLAGS) -I$(AMPI_DIR)/include -c -o $@ ampiDriver.cpp
+
+ampi_interface.o: ampi_interface.cpp
+	$(MPICXX) $(CXXFLAGS) -I$(AMPI_DIR)/include -c -o $@ ampi_interface.cpp
 
 clean: 
 	rm -f *.out* driver fdDriver ampiDriver *.o 
-check:  default
-	@echo "SendRecv test..."
+check:  all
+	@echo "ScatterGather test..."
 	cat driver.out* fdDriver.out* ampiDriver.out* > test.out
 	diff test.out all_ok.check	
 	$(INDENTATION_OK)
