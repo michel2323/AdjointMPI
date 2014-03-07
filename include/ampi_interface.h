@@ -14,7 +14,8 @@
 #define INT64 long int
 
 /** Call AMPI tape interpreter from external tape */
-void ampi_interpret_tape(void);
+void ampi_interpret_tape(long int idx);
+void ampi_reset_entry(long int idx);
 
 /** Get a value v from a specific tape entry with index idx */
 extern void ampi_get_val(void* buf, int* i, double* v);

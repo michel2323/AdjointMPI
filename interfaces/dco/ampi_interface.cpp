@@ -9,7 +9,7 @@ extern "C" {
   //forward declare von AMPI
 
 #ifndef DCO_AMPI
-//void ampi_interpret_tape() {}
+  void ampi_interpret_tape(long int idx) {}
 #endif
 
 
@@ -42,19 +42,38 @@ extern "C" {
   }
   void ampi_set_adj(INT64 *idx, double *x) {
     //if(*idx!=0) const_cast<double&>(dco::a1s::global_tape->_adjoint(*idx)) = *x;
-    if(*idx!=0) const_cast<double&>(dco::a1s::global_tape->_adjoint(*idx)) += *x;
+    if(*idx!=0) dco::a1s::global_tape->_adjoint(*idx) += *x;
     //    if(*idx) *(*idx)=*x;
     //std::cout << "set adj: " << *x << " idx=" << *idx << std::endl;
   }
 
+
+  extern "C" void ampi_reset_entry(long int idx);
+
+  struct AMPI_data : tape::external_function_base_data  {
+	int idx;
+	AMPI_data(const int nidx) : idx(nidx) {}
+	virtual ~AMPI_data() {
+		std::cout << "ampi_reset_entry with idx=" << idx << std::endl;
+		ampi_reset_entry(idx);
+	}
+  };  
+
   void ampi_tape_wrapper(tape &caller, const tape::interpretation_settings &settings, dco::a1s::tape::external_function_base_data *userdata) {
-    ampi_interpret_tape();
+	AMPI_data *data = static_cast<AMPI_data*>(userdata);
+    	ampi_interpret_tape(data->idx);
   }
 
+
   void ampi_create_tape_entry(long int *i) {
+    if(!global_tape->is_active()) {
+	std::cout << "tape is passive, not AMPI Callback will be created!" << std::endl;
+	return;
+    }
     //todo: insert an external function handler!!!
-    global_tape->register_external_function(&ampi_tape_wrapper, 0);
+    global_tape->register_external_function(&ampi_tape_wrapper, new AMPI_data(*i));
     //this will call ampi_interpret_tape
+    std::cout << "i: " << *i << endl;
   }
 
   void ampi_create_dummies(void *buf, int *size) {

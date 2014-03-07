@@ -117,6 +117,7 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     int i = 0;
+    /*printf("Send_b request ptr: %p\n", request->request);*/
     if(!request->aw) {
 	MPI_Wait(request->request, MPI_STATUS_IGNORE);
 	for(i = 0 ; i < request->size ; i++) {
@@ -147,6 +148,7 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     int i = 0;
+    /*printf("Recv_b request ptr: %p\n", request->request);*/
     if(!request->aw) {
 	MPI_Wait(request->request, &request->status);
 	for(i = 0 ; i < request->size ; i++) {
@@ -175,6 +177,7 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 #ifdef DEBUG
     int i=0;
 #endif
+    /*printf("Wait_b request ptr: %p\n", request->request);*/
     if(request->oc == AMPI_IS) {
 	return MPI_Irecv(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->request);
     }
@@ -464,6 +467,7 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     double *r = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    printf("AMPI_Allreduce start\n");
 #ifdef DEBUG
     printf("AMPI_Allreduce_b count: %d\n",count);
     for(i=0 ; i<count ; i++) {
@@ -507,9 +511,9 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
       s_d[i] = recvbuf[i];
     }
     if(op == MPI_PROD) {
-#ifdef DEBUG
+      /*#ifdef DEBUG*/
       printf("AMPI_Allreduce_b MPI_PROD\n");
-#endif
+      /*#endif*/
       for(i=0 ; i<count ; i=i+1) {
 	if(r[i]*s_d[i] == 0.0){
 	  sendbuf[i]=0;
@@ -524,9 +528,9 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
       }
     }
     if(op == MPI_SUM) {
-#ifdef DEBUG
+      /*#ifdef DEBUG*/
       printf("AMPI_Allreduce_b MPI_SUM\n");
-#endif
+      /*#endif*/
       for(i=0 ; i<count ; i=i+1) {
 	sendbuf[i] = s_d[i];
       }
@@ -537,10 +541,11 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     }
     if(op == MPI_MIN || op == MPI_MAX) {
       minmaxbuf_tmp = (double*) malloc(sizeof(double)*count);
-#ifdef DEBUG
-      printf("AMPI_Allreduce_b MPI_MIN or MPI_MAX\n");
-#endif
+      /*#ifdef DEBUG*/
+      printf("AMPI_Allreduce_b MPI_MIN or MPI_MAX start \n");
+      /*#endif*/
       MPI_Allreduce(recvbuf, minmaxbuf_tmp, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      printf("AMPI_Allreduce_b MPI_MIN or MPI_MAX end\n");
       for(i=count-1;i>=0;i--) {
 	idx=(int)AMPI_pop(&ampi_reduce_stack);
 	if(myid==idx) {
@@ -564,6 +569,7 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     }
     printf("\n");
 #endif
+    printf("AMPI_Allreduce end\n");
     return MPI_SUCCESS;
 }
 
