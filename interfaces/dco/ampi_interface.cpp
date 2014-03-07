@@ -9,7 +9,7 @@ extern "C" {
   //forward declare von AMPI
 
 #ifndef DCO_AMPI
-  void ampi_interpret_tape(long int idx) {}
+  //void ampi_interpret_tape(long int idx) {}
 #endif
 
 
@@ -73,7 +73,6 @@ extern "C" {
     //todo: insert an external function handler!!!
     global_tape->register_external_function(&ampi_tape_wrapper, new AMPI_data(*i));
     //this will call ampi_interpret_tape
-    std::cout << "i: " << *i << endl;
   }
 
   void ampi_create_dummies(void *buf, int *size) {

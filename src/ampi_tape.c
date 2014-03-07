@@ -74,7 +74,6 @@ int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     for(i=0;i<count;i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(buf,&i,&tmp[i]);
-	/*printf("MPI_DUMMY IDX: %d\n", tmp_int64);*/
 	ampi_get_idx(buf, &i, &ampi_tape[ampi_vac+i].idx);
     }
 
@@ -777,7 +776,6 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
     ampi_tape[ampi_vac].tag = tag;
     HASH_ADD_PTR(AMPI_ht,key,ht_el);
     ampi_vac=ampi_vac+1;
-  printf("Hallo\n");
     return 0;
 }
 int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
@@ -787,7 +785,6 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
   if(datatype!=AMPI_DOUBLE) {
     return MPI_Send_init(buf, count, datatype, dest, tag, comm, mpi_request);
   }
-  printf("Hallo\n");
     ampi_check_tape_size(1);
     AMPI_Request *request=(AMPI_Request*) malloc(sizeof(AMPI_Request));
     AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
@@ -836,7 +833,7 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
     ampi_tape[ampi_vac+count].comm = comm;
     ampi_tape[ampi_vac+count].tag = sendtag;
 
-    long int new_vac = ampi_vac+count;
+    long int new_vac = ampi_vac+count+1;
 
     ampi_create_dummies(buf, &count);
     ampi_create_tape_entry(&new_vac);
@@ -870,7 +867,6 @@ int AMPI_Start(MPI_Request *mpi_request) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    printf("AMPI_Start\n");
     AMPI_ht_el *ht_req=NULL;
     int ret=0;
     long int va=0;
@@ -930,10 +926,10 @@ void ampi_interpret_tape(long int idx){
     /*ampi_vac=ampi_vac-1;*/
     /*i=ampi_vac;*/
     i=idx;
-    /*#ifdef DEBUG*/
+#ifdef DEBUG
     printf("AMPI_TAPE Interpreter OC: %d\n", ampi_tape[i].oc);
     printf("--------------------------------START\n");
-    /*#endif*/
+#endif
     switch(ampi_tape[i].oc){ 
 	case SEND : {
 			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
@@ -1176,8 +1172,6 @@ void ampi_interpret_tape(long int idx){
 			   break;
 		       }
 	case SENDRECVREPLACE : {
-			     /*two entries for sendrecvreplace, decrease tape index*/
-			     /*i=i-1;ampi_vac=ampi_vac-1;*/
 			tmp_d = (double*) malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			/*take adjoints out of the tape in the send buffer*/
 #pragma omp parallel for private(tmp_entry)
@@ -1195,7 +1189,6 @@ void ampi_interpret_tape(long int idx){
 
 	                /*two entries for sendrecvreplace, decrease tape index*/
 	                i=i-1;
-			/*ampi_vac=ampi_vac-1;*/
 #pragma omp parallel for private(tmp_entry)
 			for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
 			    tmp_entry=&ampi_tape[i-ampi_tape[i].arg[0]+j];
@@ -1213,23 +1206,8 @@ void ampi_interpret_tape(long int idx){
 		      }
 
     }
-    printf("-------------------------------- END\n");
 }
 void ampi_reset_entry(long int idx){ 
-  /*int j=0;*/
-  /*double *tmp_d;*/
-  /*double *tmp_d_recv;*/
-  /*double *tmp_d_send;*/
-  /*long int i=ampi_vac;*/
-  /*ampi_tape_entry *tmp_entry;*/
-  /*MPI_Comm comm;*/
-  /*MPI_Op op = MPI_SUM;*/
-  /*comm = MPI_COMM_WORLD;*/
-  /*MPI_Status status;*/
-  /*ampi_vac=ampi_vac-1;*/
-  /*while(ampi_tape[ampi_vac].oc == MPI_DUMMY)*/
-  /*ampi_vac=ampi_vac-1;*/
-  /*printf("ampi_vac,idx: %lu,%lu\n", ampi_vac, idx);*/
   ampi_vac=idx;
 }
 void ampi_print_tape() {

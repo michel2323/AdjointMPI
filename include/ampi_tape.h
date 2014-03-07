@@ -25,7 +25,7 @@
  * Sets the chunk size of the AMPI tape. When the tape exceeds this size, a new
  * chunk is allocated.
  */
-#define AMPI_CHUNK_SIZE 5000
+#define AMPI_CHUNK_SIZE 500000
 
 /**
  * @{
