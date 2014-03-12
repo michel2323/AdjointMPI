@@ -1200,6 +1200,12 @@ void ampi_interpret_tape(long int idx){
 			free(tmp_d);
 			break;
 			 }
+	case SEND_INIT : {
+			break;
+			 }
+	case RECV_INIT : {
+			break;
+			 }
 	default: {
 		     printf("Warning: Missing opcode in the AMPI tape interpreter for %d at tape index %lu.\n", ampi_tape[i].oc, i);
 		     break;
