@@ -458,7 +458,6 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     double **recvbuf_tmp = 0;
     double *minmaxbuf_tmp = 0;
     MPI_Request *requests = 0;
-    MPI_Status *status = 0;
     double *s = 0;
     double *s_d = 0; 
     double *r = 0;
@@ -473,19 +472,21 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     if(op == MPI_PROD || op == MPI_SUM) {        
     if(myid==0) {
         requests = (MPI_Request*) malloc(sizeof(MPI_Request)*(numprocs-1));
-        status = (MPI_Status*) malloc(sizeof(MPI_Status)*(numprocs-1));
 	recvbuf_tmp = (double**) malloc(sizeof(double*)*numprocs);
 	recvbuf_tmp[0] = recvbuf;
         for(i=1;i<numprocs;i++) {
 	    recvbuf_tmp[i] = (double*) malloc(sizeof(double)*count);
 	    MPI_Irecv(recvbuf_tmp[i], count, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &requests[i-1]);
         }
-	MPI_Waitall(numprocs-1,requests,status);
+	MPI_Waitall(numprocs-1,requests,MPI_STATUSES_IGNORE);
 	free(requests);
 	for(j=0;j<count;j++) {
 	    for(i=1;i<numprocs;i++) {
 		recvbuf[j]=recvbuf[j]+recvbuf_tmp[i][j];
 	    }
+	}
+	for(j=1;j<numprocs;j++) {
+	  free(recvbuf_tmp[j]);
 	}
 	free(recvbuf_tmp);
     }

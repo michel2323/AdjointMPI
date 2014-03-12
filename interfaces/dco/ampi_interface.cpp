@@ -9,8 +9,9 @@ extern "C" {
   //forward declare von AMPI
 
 #ifndef DCO_AMPI
-  //void ampi_interpret_tape(long int idx) {}
+  void ampi_interpret_tape(long int idx) {}
 #endif
+//long int ampi_counter=0;
 
 
   void ampi_get_val(void *buf, int *i, double *x) {
@@ -54,7 +55,7 @@ extern "C" {
 	int idx;
 	AMPI_data(const int nidx) : idx(nidx) {}
 	virtual ~AMPI_data() {
-		std::cout << "ampi_reset_entry with idx=" << idx << std::endl;
+//std::cout << "ampi_reset_entry with idx=" << idx << std::endl;
 		ampi_reset_entry(idx);
 	}
   };  
@@ -67,12 +68,16 @@ extern "C" {
 
   void ampi_create_tape_entry(long int *i) {
     if(!global_tape->is_active()) {
-	std::cout << "tape is passive, not AMPI Callback will be created!" << std::endl;
+//	std::cout << "tape is passive, not AMPI Callback will be created!" << std::endl;
 	return;
     }
     //todo: insert an external function handler!!!
     global_tape->register_external_function(&ampi_tape_wrapper, new AMPI_data(*i));
+ //   ampi_counter++;
+ //   std::cout << "ampi_counter: " << ampi_counter << endl;
+    
     //this will call ampi_interpret_tape
+//std::cout << "i: " << *i << endl;
   }
 
   void ampi_create_dummies(void *buf, int *size) {
