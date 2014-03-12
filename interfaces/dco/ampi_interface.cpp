@@ -9,7 +9,7 @@ extern "C" {
   //forward declare von AMPI
 
 #ifndef DCO_AMPI
-  void ampi_interpret_tape(long int idx) {}
+  //void ampi_interpret_tape(long int idx) {}
 #endif
 //long int ampi_counter=0;
 

@@ -3,9 +3,9 @@ include ../Makefile.inc
 NPROC=2
 PSIZE=10
 
-DCO_BUILD=$(DCO_BASE_DIR)/build/dco_cpp
+DCO_INCLUDE=$(DCO_BASE_DIR)/src/dco
 
-CXXFLAGS=-g  -O0 -I$(DCO_BUILD)/include -L$(DCO_BUILD)/lib -fopenmp
+CXXFLAGS=-g  -O0 -I$(DCO_INCLUDE) $(DCO_FLAGS)
 
 all: driver.out fdDriver.out ampiDriver.out
 
@@ -31,7 +31,7 @@ fdDriver.o: fdDriver.cpp
 	${MPICXX} $(CXXFLAGS) -c -o $@ fdDriver.cpp 
 
 ampiDriver: ampiDriver.o ampi_interface.o
-	$(MPICXX) $(CXXFLAGS) -o $@ ampiDriver.o ampi_interface.o -ldco $(AMPI_DIR)/src/libAMPI.a
+	$(MPICXX) $(CXXFLAGS) -o $@ ampiDriver.o ampi_interface.o $(AMPI_DIR)/src/libAMPI.a
 
 ampiDriver.o: ampiDriver.cpp
 	$(MPICXX) $(CXXFLAGS) -I$(AMPI_DIR)/include -c -o $@ ampiDriver.cpp

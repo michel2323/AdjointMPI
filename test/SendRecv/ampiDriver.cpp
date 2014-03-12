@@ -8,6 +8,8 @@ using namespace std;
 
 typedef dco::a1s::type active;
 
+dco::a1s::tape *dco::a1s::global_tape=0;
+
 void comp(active *x, active &y, int &n) {
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);

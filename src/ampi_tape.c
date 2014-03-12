@@ -442,79 +442,78 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 }
 
 int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm) {
+  int ierr=0;
 #ifdef AMPI_COUNT_COMMS
-    ampi_comm_count=ampi_comm_count+1;
+  ampi_comm_count=ampi_comm_count+1;
 #endif
-    if(datatype!=AMPI_DOUBLE) {
-      MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
-    }
-    ampi_check_tape_size(2*count+1);
-    int tapeActive = ampi_is_tape_active();
-    int i=0;
-    double * tmp_send = (double*) malloc(sizeof(double)*count);
-    double * tmp_recv = (double*) malloc(sizeof(double)*count);
+  if(datatype!=AMPI_DOUBLE) {
+    return MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+  }
+  ampi_check_tape_size(2*count+1);
+  int tapeActive = ampi_is_tape_active();
+  int i=0;
+  double * tmp_send = (double*) malloc(sizeof(double)*count);
+  double * tmp_recv = (double*) malloc(sizeof(double)*count);
 
-    long int new_vac = 0;
-    if(tapeActive) {
-        ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*3);
-        new_vac = ampi_vac+count;
+  long int new_vac = 0;
+  if(tapeActive) {
+    ampi_tape[ampi_vac+count].arg=(int*) malloc(sizeof(int)*3);
+    new_vac = ampi_vac+count;
 
-        ampi_create_dummies(recvbuf, &count);
-        ampi_create_tape_entry(&new_vac);
-    }
+    ampi_create_dummies(recvbuf, &count);
+    ampi_create_tape_entry(&new_vac);
+  }
 
-    /*sendbuf dummies*/
+  /*sendbuf dummies*/
 
-#pragma omp parallel for
-    for(i=0 ; i<count ; i=i+1) {
-        ampi_get_val(sendbuf,&i,&tmp_send[i]);
-
-        if(tapeActive) {
-            ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
-            ampi_get_idx(sendbuf, &i, &ampi_tape[ampi_vac+i].idx);
-        }
-    }
+  for(i=0 ; i<count ; i=i+1) {
+    ampi_get_val(sendbuf,&i,&tmp_send[i]);
 
     if(tapeActive) {
-        /*actual reduce entry*/
-
-        ampi_tape[ampi_vac+count].oc = ALLREDUCE;
-        ampi_tape[ampi_vac+count].arg[0] = count;
-        ampi_tape[ampi_vac+count].comm = comm;
-        /*ampi_tape[ampi_vac+count].arg[1] = root;*/
-        if(op == MPI_SUM){
-        ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_ADD;
-        }
-        if(op == MPI_PROD){
-        ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_MUL;
-        }
-        if(op == MPI_MIN){
-        ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_MIN;
-        }
-        if(op == MPI_MAX){
-        ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_MAX;
-        }
+      ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
+      ampi_get_idx(sendbuf, &i, &ampi_tape[ampi_vac+i].idx);
     }
+  }
 
-    AMPI_Allreduce_f(tmp_send, tmp_recv, count, datatype, op, comm);
+  if(tapeActive) {
+    /*actual reduce entry*/
 
-    /*recvbuf entry*/
+    ampi_tape[ampi_vac+count].oc = ALLREDUCE;
+    ampi_tape[ampi_vac+count].arg[0] = count;
+    ampi_tape[ampi_vac+count].comm = comm;
+    /*ampi_tape[ampi_vac+count].arg[1] = root;*/
+    if(op == MPI_SUM){
+      ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_ADD;
+    }
+    if(op == MPI_PROD){
+      ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_MUL;
+    }
+    if(op == MPI_MIN){
+      ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_MIN;
+    }
+    if(op == MPI_MAX){
+      ampi_tape[ampi_vac+count].arg[2] = AMPI_REDUCE_MAX;
+    }
+  }
 
-#pragma omp parallel for
-	for(i=0 ; i<count ; i=i+1) {
-	    if(tapeActive) {
-	        ampi_tape[ampi_vac+count+1+i].oc = MPI_DUMMY;
-	        ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+count+1+i].idx);
-	    }
-	    ampi_set_val(recvbuf, &i, &tmp_recv[i]);
-	}
+  ierr=AMPI_Allreduce_f(tmp_send, tmp_recv, count, datatype, op, comm);
 
-	if(tapeActive) {
-	    ampi_vac+=2*count+1;
-	}
-    free(tmp_send);
-    free(tmp_recv);
-    return 0;
+  /*recvbuf entry*/
+
+  for(i=0 ; i<count ; i=i+1) {
+    if(tapeActive) {
+      ampi_tape[ampi_vac+count+1+i].oc = MPI_DUMMY;
+      ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+count+1+i].idx);
+    }
+    ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+  }
+
+  if(tapeActive) {
+    ampi_vac+=2*count+1;
+  }
+  free(tmp_send);
+  free(tmp_recv);
+  return ierr;
 }
 
 int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm) {
