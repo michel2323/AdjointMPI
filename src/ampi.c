@@ -451,13 +451,10 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 
 int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm) {
     int i=0;
-    int j=0;
     int myid=0;
     int numprocs=0;
     int idx=0;
-    double **recvbuf_tmp = 0;
     double *minmaxbuf_tmp = 0;
-    MPI_Request *requests = 0;
     double *s = 0;
     double *s_d = 0; 
     double *r = 0;
@@ -470,31 +467,7 @@ int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
     }
 #endif
     if(op == MPI_PROD || op == MPI_SUM) {        
-    if(myid==0) {
-        requests = (MPI_Request*) malloc(sizeof(MPI_Request)*(numprocs-1));
-	recvbuf_tmp = (double**) malloc(sizeof(double*)*numprocs);
-	recvbuf_tmp[0] = recvbuf;
-        for(i=1;i<numprocs;i++) {
-	    recvbuf_tmp[i] = (double*) malloc(sizeof(double)*count);
-	    MPI_Irecv(recvbuf_tmp[i], count, MPI_DOUBLE, i, 0, MPI_COMM_WORLD, &requests[i-1]);
-        }
-	MPI_Waitall(numprocs-1,requests,MPI_STATUSES_IGNORE);
-	free(requests);
-	for(j=0;j<count;j++) {
-	    for(i=1;i<numprocs;i++) {
-		recvbuf[j]=recvbuf[j]+recvbuf_tmp[i][j];
-	    }
-	}
-	for(j=1;j<numprocs;j++) {
-	  free(recvbuf_tmp[j]);
-	}
-	free(recvbuf_tmp);
-    }
-    else {
-	i=0;
-	MPI_Send(recvbuf, count, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
-    }
-    MPI_Bcast(recvbuf, count, datatype, 0, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, recvbuf, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     s = (double*) malloc(sizeof(double)*count);
     s_d = (double*) malloc(sizeof(double)*count);
     r = (double*) malloc(sizeof(double)*count);
