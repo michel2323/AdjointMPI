@@ -60,7 +60,8 @@ extern "C" {
 	}
   };  
 
-  void ampi_tape_wrapper(AMPI_data *data) {
+  void ampi_tape_wrapper(tape &caller, const tape::interpretation_settings &settings, dco::a1s::tape::external_function_base_data *userdata) {
+	AMPI_data *data = static_cast<AMPI_data*>(userdata);
     	ampi_interpret_tape(data->idx);
   }
 
@@ -71,7 +72,7 @@ extern "C" {
 	return;
     }
     //todo: insert an external function handler!!!
-    AMPI_data *D = global_tape->create_ext_fcn_data<AMPI_data>(ampi_tape_wrapper, *i);
+    global_tape->register_external_function(&ampi_tape_wrapper, new AMPI_data(*i));
  //   ampi_counter++;
  //   std::cout << "ampi_counter: " << ampi_counter << endl;
     

@@ -7,8 +7,9 @@ using namespace std;
 
 //#include "dco_tape.hpp"
 #include "f.hpp"
-#define TAPE_MODE 1
-#define DERIV_MODE 1
+
+
+dco::a1s::tape *dco::a1s::global_tape=0;
 
 int myid, numprocs;
 /*
