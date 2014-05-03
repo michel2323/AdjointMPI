@@ -81,8 +81,10 @@ typedef struct AMPI_Tupel {
  * Active forward MPI_Init.
  * First chunk of the AMPI tape is allocated.
  *
- * @param argc argc of passive code.
- * @param argv argv of passive code.
+ * @param argc argc of passive code
+ * @param argc argc of passive code
+ * @param argv argv of passive code
+ * @param argv argv of passive code
  *
  * @return error code 
  */
@@ -92,8 +94,10 @@ int AMPI_Init_f(int* argc, char*** argv);
  * Active reverse MPI Init.
  * AMPI data structures are destroyed and MPI_Finalize() is called.
  *
- * @param argv Dummy argc. Not used.
- * @param argc Dummy argv. Not used.
+ * @param argv Dummy argc. Not used
+ * @param argv Dummy argc. Not used
+ * @param argc Dummy argv. Not used
+ * @param argc Dummy argv. Not used
  *
  * @return error code
  */
@@ -102,8 +106,10 @@ int AMPI_Init_b(int* argc, char*** argv);
 /**
  * Legacy active variant of MPI_Comm_size. Only a wrapper of MPI_Comm_size.
  *
- * @param comm Communicator.
- * @param numprocs Number of processes.
+ * @param comm Communicator
+ * @param comm Communicator
+ * @param numprocs Number of processes
+ * @param numprocs Number of processes
  *
  * @return error code 
  */
@@ -113,8 +119,10 @@ int AMPI_Comm_size(MPI_Comm comm, int* numprocs);
  * Active variant of MPI_Comm_rank. The rank is saved in a global variable
  * to avoid repeated calls to MPI_Comm_rank.
  *
- * @param comm Communicator.
- * @param rank Rank of calling process.
+ * @param comm Communicator
+ * @param comm Communicator
+ * @param rank Rank of calling process
+ * @param rank Rank of calling process
  *
  * @return error code 
  */
@@ -123,7 +131,8 @@ int AMPI_Comm_rank(MPI_Comm comm, int* rank);
 /**
  * Legacy. Wrapper to MPI_Get_processor_name 
  *
- * @param name Processor name.
+ * @param name Processor name
+ * @param name Processor name
  * @param namelength Processor name length. 
  *
  * @return error code
@@ -134,7 +143,8 @@ int AMPI_Get_processor_name(char* name, int* namelength);
  * Active barrier. Amounts to a wrapper of MPI_Barrier. Does 
  * not need to be traced.
  *
- * @param comm Communicator with the processes that execute a barrier.
+ * @param comm Communicator with the processes that execute a barrier
+ * @param comm Communicator with the processes that execute a barrier
  *
  * @return error code
  */
@@ -160,12 +170,18 @@ int AMPI_Finalize_b();
  *
  * The forward send amounts to a wrapper of the MPI_Send.
  *
- * @param buf Buffer with values that are to be sent.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param dest Rank of destination process.
- * @param tag Message tag.
- * @param comm MPI communicator.
+ * @param buf Buffer with values that are to be sent
+ * @param buf Buffer with values that are to be sent
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param dest Rank of destination process
+ * @param dest Rank of destination process
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
@@ -176,12 +192,18 @@ int AMPI_Send_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag
  *
  * The active reverse send amounts to an MPI_Receive with MPI_STATUS_IGNORE.
  *
- * @param buf Buffer with adjoints that are received.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param src Rank of source process.
- * @param tag Message tag.
- * @param comm MPI communicator.
+ * @param buf Buffer with adjoints that are received
+ * @param buf Buffer with adjoints that are received
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param src Rank of source process
+ * @param src Rank of source process
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
@@ -192,13 +214,20 @@ int AMPI_Send_b(double *buf, int count, MPI_Datatype datatype, int src, int tag,
  *
  * The active forward receive is a wrapper of MPI_Recv.
  *
- * @param buf Buffer with values that are received.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param src Rank of source process.
- * @param tag Message tag.
- * @param comm MPI communicator.
- * @param status MPI status of the received value message.
+ * @param buf Buffer with values that are received
+ * @param buf Buffer with values that are received
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param src Rank of source process
+ * @param src Rank of source process
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI communicator
+ * @param comm MPI communicator
+ * @param status MPI status of the received value message
+ * @param status MPI status of the received value message
  *
  * @return error code 
  */
@@ -209,13 +238,20 @@ int AMPI_Recv_f(double *buf, int count, MPI_Datatype datatype, int src, int tag,
  *
  * The active reverse receive is a wrapper of MPI_Send. The status is ignored.
  *
- * @param buf Buffer with adjoints that are sent.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param dest Rank of destination process.
- * @param tag Message tag.
- * @param comm MPI communicator.
- * @param status Ignored. Only present for consistency with the MPI signatures.
+ * @param buf Buffer with adjoints that are sent
+ * @param buf Buffer with adjoints that are sent
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param dest Rank of destination process
+ * @param dest Rank of destination process
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI communicator
+ * @param comm MPI communicator
+ * @param status Ignored. Only present for consistency with the MPI signatures
+ * @param status Ignored. Only present for consistency with the MPI signatures
  *
  * @return error code
  */
@@ -226,12 +262,18 @@ int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag
 /**
  * Active forward non blocking send
  *
- * @param buf Buffer with values that are sent.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param dest Rank of destination process.
- * @param tag Message tag.
- * @param comm MPI communicator.
+ * @param buf Buffer with values that are sent
+ * @param buf Buffer with values that are sent
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param dest Rank of destination process
+ * @param dest Rank of destination process
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  * @param request Active MPI_Request. Additional information (buf, count, dest,
  * oc, comm and the original MPI_Request) is saved in here for later use in
  * AMPI_Wait_f or AMPI_Waitall_f.
@@ -246,12 +288,18 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
  * MPI_Request through the
  * AMPI_Request.
  *
- * @param buf Points to the buffer address for the received adjoints in the request.
- * @param count Dummy argument.
- * @param datatype Dummy argument.
- * @param src Dummy argument.
- * @param tag Message tag.
- * @param comm MPI Dummy argument.
+ * @param buf Points to the buffer address for the received adjoints in the request
+ * @param buf Points to the buffer address for the received adjoints in the request
+ * @param count Dummy argument
+ * @param count Dummy argument
+ * @param datatype Dummy argument
+ * @param datatype Dummy argument
+ * @param src Dummy argument
+ * @param src Dummy argument
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI Dummy argument
+ * @param comm MPI Dummy argument
  * @param request Active MPI_Request. It conveys the buffer address for the
  * adjoints from the reverse wait to the reverse send (=receive).
  *
@@ -262,12 +310,18 @@ int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int src, int tag
 /**
  * Active forward non blocking receive
  *
- * @param buf Buffer with values that are to be received.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param dest Rank of source process.
- * @param tag Message tag.
- * @param comm MPI communicator.
+ * @param buf Buffer with values that are to be received
+ * @param buf Buffer with values that are to be received
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param dest Rank of source process
+ * @param dest Rank of source process
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  * @param request Active MPI_Request. Additional information (buf, count, dest,
  * oc, comm and the original MPI_Request) is saved in here for later use in
  * AMPI_Wait_f or AMPI_Waitall_f.
@@ -281,12 +335,18 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
  * sementical reasons, the sent adjoints are copied to the adjoint buffer buf
  * that is conveyed together with the MPI_Request through the AMPI_Request.
  *
- * @param buf Points to the buffer address of the sent adjoints in the request.
- * @param count Dummy argument.
- * @param datatype Dummy argument.
- * @param dest Dummy argument.
- * @param tag Message tag.
- * @param comm MPI Dummy argument.
+ * @param buf Points to the buffer address of the sent adjoints in the request
+ * @param buf Points to the buffer address of the sent adjoints in the request
+ * @param count Dummy argument
+ * @param count Dummy argument
+ * @param datatype Dummy argument
+ * @param datatype Dummy argument
+ * @param dest Dummy argument
+ * @param dest Dummy argument
+ * @param tag Message tag
+ * @param tag Message tag
+ * @param comm MPI Dummy argument
+ * @param comm MPI Dummy argument
  * @param request Active MPI_Request. It conveys the buffer address for the
  * adjoints from the reverse wait to the reverse send (=receive).
  *
@@ -300,8 +360,10 @@ int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
  * is provided (destination, source, value buffer address, communicator, count,
  * type of communication).
  *
- * @param request Active MPI request.
- * @param status The original status.
+ * @param request Active MPI request
+ * @param request Active MPI request
+ * @param status The original status
+ * @param status The original status
  *
  * @return error code 
  */
@@ -315,7 +377,8 @@ int AMPI_Wait_f(AMPI_Request *request , MPI_Status *status);
  *
  * @param request Active MPI request with all the information needed for the
  * reverse communication
- * @param status Dummy argument. Status is saved in the active requests.
+ * @param status Dummy argument. Status is saved in the active requests
+ * @param status Dummy argument. Status is saved in the active requests
  *
  * @return error code 
  */
@@ -325,9 +388,12 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status *status);
  * Active forward waitall. An MPI_Waitall is executed. The original
  * MPI_Request requests are saved into the active requests. 
  *
- * @param count Number of requests.
- * @param requests Active requests.
- * @param status Original statuses.
+ * @param count Number of requests
+ * @param count Number of requests
+ * @param requests Active requests
+ * @param requests Active requests
+ * @param status Original statuses
+ * @param status Original statuses
  *
  * @return error code 
  */
@@ -338,9 +404,12 @@ int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status);
  * case. For each forward wait, a send or receive communication has to be
  * started. Therefore we call an active reverse wait for each active request. 
  *
- * @param count Number of requests.
- * @param requests Active requests.
- * @param status Dummy argument. Status is saved in the active requests.
+ * @param count Number of requests
+ * @param count Number of requests
+ * @param requests Active requests
+ * @param requests Active requests
+ * @param status Dummy argument. Status is saved in the active requests
+ * @param status Dummy argument. Status is saved in the active requests
  *
  * @return error code 
  */
@@ -353,9 +422,12 @@ int AMPI_Waitall_b(int count, AMPI_Request *requests, MPI_Status *status);
  * for additional information. In the forward routine, the anti-wait flag in the
  * active requests are set.
  *
- * @param count Number of requests.
- * @param requests Active requests.
- * @param status Original statuses. Dummy argument.
+ * @param count Number of requests
+ * @param count Number of requests
+ * @param requests Active requests
+ * @param requests Active requests
+ * @param status Original statuses. Dummy argument
+ * @param status Original statuses. Dummy argument
  *
  * @return error code 
  */
@@ -367,9 +439,12 @@ int AMPI_Awaitall_f(int count, AMPI_Request *requests, MPI_Status *status);
  * for the adjoint communications are executed here, as opposed to single waits
  * in the non blocking sends and receives.
  *
- * @param count Number of requests.
- * @param requests Active requests.
- * @param status Dummy argument. Status is inside active requests.
+ * @param count Number of requests
+ * @param count Number of requests
+ * @param requests Active requests
+ * @param requests Active requests
+ * @param status Dummy argument. Status is inside active requests
+ * @param status Dummy argument. Status is inside active requests
  *
  * @return error code 
  */
@@ -380,11 +455,16 @@ int AMPI_Awaitall_b(int count, AMPI_Request *requests, MPI_Status *status);
 /**
  * Forward active broadcast. An MPI_Broadcast is executed.
  *
- * @param buf Buffer of broadcast value.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param root Process with the buffer that is broadcast.
- * @param comm MPI communicator.
+ * @param buf Buffer of broadcast value
+ * @param buf Buffer of broadcast value
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param root Process with the buffer that is broadcast
+ * @param root Process with the buffer that is broadcast
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
@@ -397,10 +477,14 @@ int AMPI_Bcast_f(double *buf, int count, MPI_Datatype datatype, int root, MPI_Co
  * @param buf Send buffer with adjoints that are to be reduced. After
  * AMPI_Bcast_f is called this is the received buffer of reduced adjoint on the
  * root process.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
- * @param root Process with the buffer that the adjoints are reduced to.
- * @param comm MPI communicator.
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param root Process with the buffer that the adjoints are reduced to
+ * @param root Process with the buffer that the adjoints are reduced to
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code
  */
@@ -418,15 +502,20 @@ int AMPI_Bcast_b(double *buf, int count, MPI_Datatype datatype, int root, MPI_Co
  * minimum is saved. Hence, we execute an MPI_MAXLOC or MPI_MINLOC after copying
  * the data accordingly.
  *
- * @param sendbuf The sent value buffer.
+ * @param sendbuf The sent value buffer
+ * @param sendbuf The sent value buffer
  * @param recvbuf The received value buffer. In case of the MPI_PROD all the
  * processes have the result.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
  * @param op Reduction operation (MPI_SUM, MPI_PROD, MPI_MAX or MPI_MIN)
- * @param root Process with the buffer that the values are reduced to.
+ * @param root Process with the buffer that the values are reduced to
+ * @param root Process with the buffer that the values are reduced to
  * Irreleveant in case of MPI_PROD.
- * @param comm MPI communicator.
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
@@ -440,13 +529,19 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
  * MPI_PROD, we have currently implemented the short solution, where the local
  * adjoint is computed by dividing the global result with the local result.
  *
- * @param sendbuf The incoming adjoint buffer address.
- * @param recvbuf The broadcast adjoint buffer address.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
+ * @param sendbuf The incoming adjoint buffer address
+ * @param sendbuf The incoming adjoint buffer address
+ * @param recvbuf The broadcast adjoint buffer address
+ * @param recvbuf The broadcast adjoint buffer address
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
  * @param op Reduction operation (MPI_SUM, MPI_PROD, MPI_MAX or MPI_MIN)
- * @param root Process with the buffer that the adjoints are broadcast from.
- * @param comm MPI communicator.
+ * @param root Process with the buffer that the adjoints are broadcast from
+ * @param root Process with the buffer that the adjoints are broadcast from
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
@@ -461,13 +556,17 @@ int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
  * minimum is saved. Hence, we execute an MPI_MAXLOC or MPI_MINLOC after copying
  * the data accordingly.
  *
- * @param sendbuf The sent value buffer.
+ * @param sendbuf The sent value buffer
+ * @param sendbuf The sent value buffer
  * @param recvbuf The received value buffer. In case of the MPI_PROD all the
  * processes have the result.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
  * @param op Reduction operation (MPI_SUM, MPI_PROD, MPI_MAX or MPI_MIN)
- * @param comm MPI communicator.
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
@@ -478,12 +577,17 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
  * to be collected by all processes, essentially amounting to an all to all. We
  * then apply the adjoint computation like in the common reduction. 
  *
- * @param sendbuf The incoming adjoint buffer address.
- * @param recvbuf The broadcast adjoint buffer address.
- * @param count Number of buffer elements.
- * @param datatype MPI data type of the buffer elements.
+ * @param sendbuf The incoming adjoint buffer address
+ * @param sendbuf The incoming adjoint buffer address
+ * @param recvbuf The broadcast adjoint buffer address
+ * @param recvbuf The broadcast adjoint buffer address
+ * @param count Number of buffer elements
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param datatype MPI data type of the buffer elements
  * @param op Reduction operation (MPI_SUM, MPI_PROD, MPI_MAX or MPI_MIN)
- * @param comm MPI communicator.
+ * @param comm MPI communicator
+ * @param comm MPI communicator
  *
  * @return error code 
  */
