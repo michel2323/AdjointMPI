@@ -114,8 +114,7 @@ int AMPI_Restore_State();
  * Initialize AMPI consisting of allocating the AMPI tape and calling AMPI_Init_f
  *
  * @param argc Forwarded to MPI. 
- * @param argv Forwarded to MPI
- * @param argv Forwarded to MPI
+ * @param argv Forwarded to MPI.
  *
  * @return error code
  */
@@ -130,47 +129,38 @@ int AMPI_Init(int* argc, char*** argv);
 int AMPI_Finalize();
 
 /**
- * @brief Active blocking send with active buffer
- * @brief Active blocking send with active buffer
+ * @brief Active blocking send with active buffer.
  *
- * @param buf Pointer to active buffer
- * @param buf Pointer to active buffer
+ * @param buf Pointer to active buffer.
  *
  */
 int AMPI_Send(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
 /**
- * @brief Active blocking receive with active buffer
- * @brief Active blocking receive with active buffer
+ * @brief Active blocking receive with active buffer.
  *
- * @param buf Pointer to active buffer
- * @param buf Pointer to active buffer
+ * @param buf Pointer to active buffer.
  *
  */
 int AMPI_Recv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Status* status);
 
 /**
- * @brief Active non blocking send with active buffer
- * @brief Active non blocking send with active buffer
+ * @brief Active non blocking send with active buffer.
  *
- * @param buf Pointer to active buffer
- * @param buf Pointer to active buffer
+ * @param buf Pointer to active buffer.
  */
 int AMPI_Isend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request* request);
 
 /**
- * @brief Active non blocking receive with active buffer
- * @brief Active non blocking receive with active buffer
+ * @brief Active non blocking receive with active buffer.
  *
- * @param buf Pointer to active buffer
- * @param buf Pointer to active buffer
+ * @param buf Pointer to active buffer.
  *
  */
 int AMPI_Irecv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Request* request);
 
 /**
- * @brief Active wait. If the MPI_Request is in the hash table, the communication is active
- * @brief Active wait. If the MPI_Request is in the hash table, the communication is active
+ * @brief Active wait. If the MPI_Request is in the hash table, the communication is active.
  *
  */
 int AMPI_Wait(MPI_Request *, MPI_Status *);
@@ -201,48 +191,39 @@ int AMPI_Awaitall(int , AMPI_Request *, MPI_Status *);
 /**
  * @brief Active broadcast. 
  *
- * @param buf Pointer to active buffer
- * @param buf Pointer to active buffer
+ * @param buf Pointer to active buffer.
  */
 int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
 
 /**
  * @brief Active reduce. 
  *
- * @param sendbuf Pointer to active send buffer
- * @param sendbuf Pointer to active send buffer
- * @param recvbuf Pointer to active receive buffer
- * @param recvbuf Pointer to active receive buffer
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
  */
 int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm);
 
 /**
  * @brief Active allreduce. 
  *
- * @param sendbuf Pointer to active send buffer
- * @param sendbuf Pointer to active send buffer
- * @param recvbuf Pointer to active receive buffer
- * @param recvbuf Pointer to active receive buffer
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
  */
 int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
 
 /**
  * @brief Active scatter. 
  *
- * @param sendbuf Pointer to active send buffer
- * @param sendbuf Pointer to active send buffer
- * @param recvbuf Pointer to active receive buffer
- * @param recvbuf Pointer to active receive buffer
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
  */
 int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
 
 /**
  * @brief Active gather. 
  *
- * @param sendbuf Pointer to active send buffer
- * @param sendbuf Pointer to active send buffer
- * @param recvbuf Pointer to active receive buffer
- * @param recvbuf Pointer to active receive buffer
+ * @param sendbuf Pointer to active send buffer.
+ * @param recvbuf Pointer to active receive buffer.
  */
 int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
 
@@ -250,8 +231,7 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
  * @brief Active receive init. The active AMPI_Requests
  * are registered. MPI_Recv_init is _not_ executed in AMPI. See AMPI_Start.
  *
- * @param buf Pointer to active receive buffer
- * @param buf Pointer to active receive buffer
+ * @param buf Pointer to active receive buffer.
  */
 int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
 
@@ -259,8 +239,7 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
  * @brief Active receive init. The active AMPI_Requests
  * are registered. MPI_Send_init is _not_ executed in AMPI. See AMPI_Start.
  *
- * @param buf Pointer to active send buffer
- * @param buf Pointer to active send buffer
+ * @param buf Pointer to active send buffer.
  */
 int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request);
 
@@ -276,8 +255,7 @@ int AMPI_Startall(int count, MPI_Request array_of_requests[]);
 
 /** @brief Active sendrecv with replace. 
  *
- * @param buf Pointer to active buf
- * @param buf Pointer to active buf
+ * @param buf Pointer to active buf.
  */
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
 
