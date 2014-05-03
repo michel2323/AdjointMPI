@@ -43,8 +43,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt])
 
 AC_CONFIG_FILES([Makefile
-		 src/Makefile
-                 doc/Makefile])
+		 src/Makefile])
 AC_SUBST(MPICC)
 AC_SUBST(MPI_INC_DIR)
 AC_SUBST(MPI_LIB_DIR)

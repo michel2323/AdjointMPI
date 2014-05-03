@@ -1,5 +1,10 @@
 #ifndef AMPI_STACK_H
 #define AMPI_STACK_H
+/** \file
+ * \brief The AMPI stack is used for tracing the operations in the AMPI_Reduce()
+ * and AMPI_Allreduce().
+ */
+
 #include <stdlib.h>
 
 #define CHUNK_SIZE 1000
