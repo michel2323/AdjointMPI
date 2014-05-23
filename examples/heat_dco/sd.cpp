@@ -38,9 +38,9 @@ int main(int argc, char* argv[]) {
     // we require delta_t <= (1/nx)^2/(2*c) 
     // =1/(nx^2*2*c)
     // int nx = 50; // default
-    int nx=50;
+    int nx=200;
     // int nt = 100; // default
-    int nt=100;
+    int nt=1000;
     active cost, cost_d, delta_t=1./nt, c=1e-3;
     // max time steps on tape
     int stride=10;
@@ -79,6 +79,7 @@ int main(int argc, char* argv[]) {
     double ng;
     const double eps=1e-3;
     f(nx,nt,stride,delta_t,a,b,c,temp,temp_obs,cost);
+    for (int i=0;i<=nx;i++) cout << "temp_sim[" << i << "]: " << temp[i] << endl;
     cout << "start cost=" << cost << endl;
 
     int mpi_j = 0;
