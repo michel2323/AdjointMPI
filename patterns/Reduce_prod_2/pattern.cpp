@@ -8,11 +8,11 @@ int rank;
 using namespace std;
 
 void passive_pattern(double *sendbuf, double *recvbuf, int &n) {
-  MPI_Reduce(sendbuf,recvbuf,n,MPI_DOUBLE,MPI_SUM,0,MPI_COMM_WORLD);
+  MPI_Reduce(sendbuf,recvbuf,n,MPI_DOUBLE,MPI_PROD,0,MPI_COMM_WORLD);
 }
 
 void adjoint_forward_pattern(double *sendbuf, double *recvbuf, int &n) {
-  MPI_Allreduce(sendbuf,recvbuf,n,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+  MPI_Allreduce(sendbuf,recvbuf,n,MPI_DOUBLE,MPI_PROD,MPI_COMM_WORLD);
 }
 
 void adjoint_reverse_pattern(double *sendbuf, double *recvbuf, int &n) {
