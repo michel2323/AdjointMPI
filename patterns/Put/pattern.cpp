@@ -23,7 +23,7 @@ void passive_pattern(double *x, int &n) {
 void adjoint_forward_pattern(double *x, int &n) {
   if(rank==0) {
     MPI_Win_fence(0,win);
-    MPI_Get(x,n,MPI_DOUBLE,1,0,n,MPI_DOUBLE, win);
+    MPI_Put(x,n,MPI_DOUBLE,1,0,n,MPI_DOUBLE, win);
     MPI_Win_fence(0,win);
   }
   if(rank==1) {
@@ -37,7 +37,7 @@ void adjoint_reverse_pattern(double *x, double *z, int &n) {
     MPI_Win_fence(0,win);
     MPI_Get(z,n,MPI_DOUBLE,1,0,n,MPI_DOUBLE,win);
     MPI_Win_fence(0,win);
-    for(int i=0;i<n;i++) z[i]+=x[i];
+    for(int i=0;i<n;i++) x[i]+=z[i];
     MPI_Win_fence(0,win);
   }
   if(rank==1) {

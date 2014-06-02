@@ -36,7 +36,8 @@ void adjoint_reverse_pattern(double *x, double *z, int &n) {
   if(rank==0) {
     MPI_Win_fence(0,win);
     MPI_Win_fence(0,win);
-    MPI_Accumulate(z,n,MPI_DOUBLE,1,0,n,MPI_DOUBLE,MPI_SUM,win);
+    //MPI_Accumulate(z,n,MPI_DOUBLE,1,0,n,MPI_DOUBLE,MPI_SUM,win);
+    MPI_Put(z,n,MPI_DOUBLE,1,0,n,MPI_DOUBLE, win);
     MPI_Win_fence(0,win);
     for(int i=0;i<n;i++) z[i]=x[i];
     MPI_Win_fence(0,win);
