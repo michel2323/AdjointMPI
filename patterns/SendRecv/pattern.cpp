@@ -21,9 +21,10 @@ void adjoint_forward_pattern(double *x, int &n) {
     MPI_Recv(x,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 }
 
-void adjoint_reverse_pattern(double *x, int &n) {
+void adjoint_reverse_pattern(double *x, double *z, int &n) {
   if(rank==1)
-    MPI_Send(x,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD);
+    MPI_Send(z,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD);
+    for(int i=0;i<n;i++) x[i]+=z[i];
   if(rank==0)
     MPI_Recv(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 }
@@ -47,11 +48,12 @@ int main(int argc, char *argv[]) {
   delete [] x; 
 
   x=new double[n]; 
+  double *z=new double[n]; 
   double t4=MPI_Wtime();
-  adjoint_reverse_pattern(x,n);
+  adjoint_reverse_pattern(x,z,n);
   double t5=MPI_Wtime();
   cout << "Active reverse pattern: " << t5-t4 << " s." << endl;
-  delete [] x; 
+  delete [] x; delete [] z; 
 
   cout << "Ratio:" << (t5-t4+t3-t2)/(t1-t0) << endl; 
   MPI_Finalize();
