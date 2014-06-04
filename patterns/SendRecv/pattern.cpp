@@ -22,9 +22,10 @@ void adjoint_forward_pattern(double *x, int &n) {
 }
 
 void adjoint_reverse_pattern(double *x, double *z, int &n) {
-  if(rank==1)
+  if(rank==1) {
     MPI_Send(z,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD);
     for(int i=0;i<n;i++) x[i]+=z[i];
+  }
   if(rank==0)
     MPI_Recv(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 }
