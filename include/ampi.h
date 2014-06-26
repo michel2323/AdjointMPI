@@ -475,7 +475,7 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
 
 /**
  * Reverse active allreduce. All the adjoints of all the processes have
- * to be collected by all processes, essentially amounting to an all to all. We
+ * to be summed up and sent to all processes, essentially amounting to an allreduce with an MPI_SUM operation. We
  * then apply the adjoint computation like in the common reduction. 
  *
  * @param sendbuf The incoming adjoint buffer address

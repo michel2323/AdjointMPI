@@ -3,11 +3,11 @@
 
 /*! \mainpage 
  * The adjoint MPI library served as a prototyping library for developing and applying adjoint MPI
- * patterns in the context of my disseration "Semantics Driven Adjoints of the Message Parsing Interface.
+ * patterns in the context of my disseration "Semantics Driven Adjoints of the Message Parsing Interface".
  * It is provided as is under the MIT licence. In the disseration you will find
  * the theoretical backround for the reversing or adjoining MPI communication.
  * The unique feature of this library is its generic interface in
- * ampi_interface.h that allows an easy integration into other AD tools that are
+ * ampi_interface.h that allows an easy integration into other AD tools 
  * not yet aware of MPI calls.
  */
 
