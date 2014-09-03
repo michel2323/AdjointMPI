@@ -1,0 +1,10 @@
+include/ampi.h
+include/ampi_stack.h
+include/ampi_stubs.h
+include/ampi_tape.h
+include/ampi_tape.hpp
+include/uthash.h
+src/ampi.c
+src/ampi_stack.c
+src/ampi_tape.c
+config.h

@@ -1,6 +1,6 @@
-CC=mpiicc
-AM_CXXFLAGS = -Wall -xsse4.1 -O3 -no-prec-dev -I$(top_srcdir)/include
-AM_CFLAGS = -Wall -xsse4.1 -ansi-alias  -O3 -Wno-unknown-pragmas -std=c89 -I$(top_srcdir)/include 
+CC=mpicc
+AM_CXXFLAGS = -Wall -O3  -I$(top_srcdir)/include
+AM_CFLAGS = -Wall -O3 -std=c89 -I$(top_srcdir)/include 
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
 lib_LIBRARIES = libAMPI.a

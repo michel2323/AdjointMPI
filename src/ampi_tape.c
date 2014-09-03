@@ -61,7 +61,6 @@ int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     int new_vac = ampi_vac+count;
 
     ampi_create_tape_entry(&new_vac);
-//#pragma omp parallel for
     for(i=0;i<count;i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(buf,&i,&tmp[i]);
@@ -94,7 +93,6 @@ int AMPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
     int new_vac = ampi_vac+count;
 
     ampi_create_tape_entry(&new_vac);
-//#pragma omp parallel for
     for(i=0;i<count;i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(buf,&i,&tmp[i]);
@@ -142,7 +140,6 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     else
       ampi_tape[ampi_vac].tag = status->MPI_TAG;
 
-//#pragma omp parallel for
     for(i=0;i<count;i=i+1) {
 	ampi_tape[ampi_vac+i+1].oc = MPI_DUMMY;
 	
@@ -175,7 +172,6 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 
     /*create dummy of each element*/
 
-//#pragma omp parallel for
     for(i=0 ; i<count ; i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(buf,&i,&tmp[i]);
@@ -233,7 +229,6 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
     ampi_tape[ampi_vac].comm = comm;
     ampi_tape[ampi_vac].tag = tag;
 
-//#pragma omp parallel for
     for(i=0 ; i<count ; i=i+1) {
 	/*ampi_get_idx(buf, &i, &tmp_int64);*/
 	ampi_get_idx(buf, &i, &ampi_tape[ampi_vac+i+1].idx);
@@ -404,7 +399,6 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 
     /*sendbuf dummies*/
 
-//#pragma omp parallel for
     for(i=0 ; i<count ; i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(sendbuf,&i,&tmp_send[i]);
@@ -435,7 +429,6 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
     /*recvbuf entry*/
 
     if (rank == root){
-//	//#pragma omp parallel for
 		for(i=0 ; i<count ; i=i+1) {
 		ampi_tape[ampi_vac+count+1+i].oc = MPI_DUMMY;
 		ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+count+1+i].idx);
@@ -466,7 +459,6 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     /*sendbuf dummies*/
 
-////#pragma omp parallel for
     for(i=0 ; i<count ; i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(sendbuf,&i,&tmp_send[i]);
@@ -496,7 +488,6 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     /*recvbuf entry*/
 
-////#pragma omp parallel for
 	for(i=0 ; i<count ; i=i+1) {
 	    ampi_tape[ampi_vac+count+1+i].oc = MPI_DUMMY;
 	    ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+count+1+i].idx);
@@ -523,7 +514,6 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 
   /*sendbuf dummies*/
 
-//#pragma omp parallel for
   for(i=0 ; i<sendcnt*size ; i=i+1) {
     ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
     ampi_get_val(sendbuf,&i,&tmp_send[i]);
@@ -541,7 +531,6 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 
   /*recvbuf entry*/
 
-//#pragma omp parallel for
   for(i=0 ; i<recvcnt ; i=i+1) {
     ampi_tape[ampi_vac+sendcnt*size+1+i].oc = MPI_DUMMY;
     ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+sendcnt*size+1+i].idx);
@@ -572,7 +561,6 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
 
     /*sendbuf dummies*/
 
-//#pragma omp parallel for
     for(i=0 ; i<max_size ; i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(sendbuf,&i,&tmp_send[i]);
@@ -592,7 +580,6 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
 
     /*recvbuf entry*/
 
-//#pragma omp parallel for
     for(i=0 ; i<recvcnt ; i=i+1) {
 	ampi_tape[ampi_vac+max_size+1+i].oc = MPI_DUMMY;
 	ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+max_size+1+i].idx);
@@ -637,7 +624,6 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
 
   /*sendbuf dummies*/
 
-//#pragma omp parallel for
   for(i=0 ; i<sendcnt ; i=i+1) {
     ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
     ampi_get_val(sendbuf,&i,&tmp_send[i]);
@@ -656,7 +642,6 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
   /*recvbuf entry*/
 
   if(rank == root) {
-//#pragma omp parallel for
 	  for(i=0 ; i<recvcnt*size ; i=i+1) {
 		ampi_tape[new_vac+1+i].oc = MPI_DUMMY;
 		ampi_get_idx(recvbuf, &i, &ampi_tape[new_vac+1+i].idx);
@@ -690,7 +675,6 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 
     /*sendbuf dummies*/
 
-//#pragma omp parallel for
     for(i=0 ; i<sendcnt ; i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(sendbuf,&i,&tmp_send[i]);
@@ -706,7 +690,6 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 
     /*recvbuf entry*/
 
-//#pragma omp parallel for
     for(i=0 ; i<max_size ; i=i+1) {
 	ampi_tape[ampi_vac+sendcnt+1+i].oc = MPI_DUMMY;
 	ampi_get_idx(recvbuf, &i, &ampi_tape[ampi_vac+sendcnt+1+i].idx);
@@ -764,7 +747,6 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
     /*This may be important for the openmp loop*/
     /*INT64 tmp_int64 = 0;*/
     ampi_check_tape_size(2*count+2);
-//#pragma omp parallel for
     for(i=0;i<count;i=i+1) {
 	ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
 	ampi_get_val(buf,&i,&tmp[i]);
@@ -792,7 +774,6 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
     ampi_tape[ampi_vac+count+1].comm = comm;
     ampi_tape[ampi_vac+count+1].tag = status->MPI_TAG;
 
-//#pragma omp parallel for
     for(i=0;i<count;i=i+1) {
 	ampi_tape[ampi_vac+count+2+i].oc = MPI_DUMMY;
 	
@@ -815,7 +796,6 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
     ampi_tape[ampi_vac+sendcount+1].arg=malloc(sizeof(int)*2);
     ampi_check_tape_size(sendcount + recvcount +2);
 
-//#pragma omp parallel for
     for(i=0;i<sendcount;i=i+1) {
     ampi_tape[ampi_vac+i].oc = MPI_DUMMY;
     ampi_get_val(sendbuf,&i,&sendtmp[i]);
@@ -845,7 +825,6 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
     ampi_tape[new_vac+1].comm = comm;
     ampi_tape[new_vac+1].tag = recvtag;
 
-//#pragma omp parallel for
     for(i=0;i<recvcount;i=i+1) {
     ampi_tape[new_vac+2+i].oc = MPI_DUMMY;
 
@@ -1174,7 +1153,6 @@ void ampi_interpret_tape(){
 			     /*i=i-1;ampi_vac=ampi_vac-1;*/
 			tmp_d = malloc(sizeof(double)*ampi_tape[i].arg[0]);
 			/*take adjoints out of the tape in the send buffer*/
-//#pragma omp parallel for private(tmp_entry)
 			for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
 			    tmp_entry=&ampi_tape[i+j+1];
 			    ampi_get_adj(&tmp_entry->idx, &tmp_d[j]);
@@ -1189,7 +1167,6 @@ void ampi_interpret_tape(){
 
 	                /*two entries for sendrecvreplace, decrease tape index*/
 	                i=i-1;ampi_vac=ampi_vac-1;
-//#pragma omp parallel for private(tmp_entry)
 			for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
 			    tmp_entry=&ampi_tape[i-ampi_tape[i].arg[0]+j];
 			    ampi_set_adj(&tmp_entry->idx, &tmp_d[j]);
@@ -1206,7 +1183,6 @@ void ampi_interpret_tape(){
             double *sendbuf = malloc(sizeof(double)*ampi_tape[i-1].arg[0]);
             double *recvbuf = malloc(sizeof(double)*ampi_tape[i].arg[0]);
             /*take adjoints out of the tape in the send buffer*/
-//#pragma omp parallel for private(tmp_entry)
             for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
                 tmp_entry=&ampi_tape[i+j+1];
                 ampi_get_adj(&tmp_entry->idx, &recvbuf[j]);
@@ -1221,7 +1197,6 @@ void ampi_interpret_tape(){
 
                     /*two entries for sendrecvreplace, decrease tape index*/
                     i=i-1;ampi_vac=ampi_vac-1;
-//#pragma omp parallel for private(tmp_entry)
             for(j=0;j<ampi_tape[i].arg[0];j=j+1) {
                 tmp_entry=&ampi_tape[i-ampi_tape[i].arg[0]+j];
                 ampi_set_adj(&tmp_entry->idx, &sendbuf[j]);
