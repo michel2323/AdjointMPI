@@ -72,7 +72,8 @@ int AMPI_Init(int*, char***);
 void AMPI_Store_Status();
 void AMPI_Restore_Status();
 
-int AMPI_Get_Status();
+AMPI_State AMPI_Get_Status();
+void AMPI_Set_Status(AMPI_State stat);
 
 int AMPI_Finalize();
 

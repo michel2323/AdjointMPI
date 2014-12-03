@@ -28,6 +28,11 @@
 #define AMPI_MAX   4
 
 
+typedef struct AMPI_State{
+  int ampi_vac;
+  int stack_size;
+} AMPI_State;
+
 /* AMPI request, replacing the MPI request */
 typedef struct AMPI_Request {
     MPI_Request *request;

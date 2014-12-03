@@ -34,8 +34,16 @@ void AMPI_Restore_Status()
     AMPI_set_stack_counter(stack_size_stored);
 }
 
-int AMPI_Get_Status(){
-	return ampi_vac;
+AMPI_State AMPI_Get_Status(){
+    AMPI_State stat;
+    stat.ampi_vac = ampi_vac;
+    stat.stack_size = AMPI_get_stack_counter();
+    return stat;
+}
+
+void AMPI_Set_Status(AMPI_State stat){
+  ampi_vac = stat.ampi_vac;
+  AMPI_set_stack_counter(stat.stack_size);
 }
 
 int AMPI_Init(int* argc, char*** argv) {
