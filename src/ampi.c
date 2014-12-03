@@ -109,7 +109,7 @@ int AMPI_Send_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag
 
 int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status) {
     int ierr=0;
-    ierr=MPI_Bsend(buf, count, datatype, dest, tag, comm);
+    ierr=MPI_Send(buf, count, datatype, dest, tag, comm);
     int rank,i;
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 /*    printf("Recv_b: %d -> %d, %d , %d \n",rank,dest,tag,count);
