@@ -7,8 +7,6 @@
 
 #include <stdlib.h>
 
-#define CHUNK_SIZE 1000
-
 /**
  * AMPI stack used to save values in particular for the reductions
  */
@@ -38,46 +36,21 @@ double AMPI_pop(ampi_stack *s);
 /**
  * @brief Create stack
  *
- * @param s created stack
+ * @param size Size of the stack. The stack should use the full size.
  */
-void AMPI_stack_init(ampi_stack *s);
+ampi_stack* AMPI_stack_create(size_t size);
 
 /**
  * @brief Destroy stack
  *
  * @param s stack to be destroyed
  */
-void AMPI_destroy(ampi_stack *s);
+void AMPI_stack_delete(ampi_stack *s);
 
 /**
- * @brief Check whether stack is full. Only used by internally. 
- *
- * @param s stack to be checked
- *
- * @return non zero if stack is full
- */
-int AMPI_full(ampi_stack *s);
-
-/**
- * @brief Expand stack. Only used internally. 
- *
- * @param s stack to expanded
- */
-void AMPI_expand(ampi_stack *s);
-
-/**
- * @brief Shrink stack. Only used internally.
- *
- * @param s stack to be shrunk
- */
-void AMPI_shrink(ampi_stack *s);
-
-/**
- * @brief Check whether stack is empty. Only used internally.
- *
- * @param s stack to be checked
- *
- * @return non zero if stack is empty
- */
-int AMPI_empty(ampi_stack *s);
+* @brief Reset the stack to the state after the pushing was finished
+*
+* @param s stack to be reseted
+*/
+void AMPI_stack_reset(ampi_stack *s);
 #endif

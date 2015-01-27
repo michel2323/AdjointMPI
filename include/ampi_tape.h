@@ -62,10 +62,12 @@
 #define RECV_INIT 19
 #define START 20
 #define STARTALL 21
+#define SENDRECV 22
 /**@}*/
 
 #include <stdlib.h>
 #include <assert.h>
+
 #include <ampi.h>
 #include <uthash.h>
 
@@ -92,23 +94,14 @@ typedef struct {
 typedef struct ampi_tape_entry {
     int oc; /**< Operation code */
     int *arg; /**< Array of arrguments */
-    INT64 idx; /**< AD tool tape index */
+    INT64 *idx; /**< AD tool tape indices */
+    ampi_stack* stack; /**< Stack for stored primal values */
     AMPI_Request *request; /**< Saved pointer to an active AMPI_Request */
     MPI_Comm comm; /**< MPI_Communicator */
     int tag; /**< MPI_Tag */
 } ampi_tape_entry;
 
 /*! AMPI taping routines which have an MPI counterpart that is adjoined.*/
-
-/**
- * Reset the AMPI tape. All the tape entries are destroyed.
- *
- * @return error code
- */
-int AMPI_Reset_Tape();
-
-int AMPI_Store_State();
-int AMPI_Restore_State();
 
 /**
  * Initialize AMPI consisting of allocating the AMPI tape and calling AMPI_Init_f
@@ -135,6 +128,14 @@ int AMPI_Finalize();
  *
  */
 int AMPI_Send(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+
+/**
+ * @brief Active blocking buffered send with active buffer
+ *
+ * @param buf Pointer to active buffer
+ *
+ */
+int AMPI_Bsend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
 /**
  * @brief Active blocking receive with active buffer
@@ -259,15 +260,11 @@ int AMPI_Startall(int count, MPI_Request array_of_requests[]);
  */
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
 
-/** Call AMPI tape printer from external tape printer */
-void ampi_print_tape(void);
+int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest, int sendtag, void *recvbuf, int recvcount, MPI_Datatype recvtype, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
+/** Release a tape handle */
+void ampi_release_tape(ampi_tape_entry* ampi_tape);
 
-/** Call AMPI tape printer from external tape printer for one tape entry */
-void ampi_print_tape_entry(int *j); 
-
-/** Check whether the tape size is larger than size. If not, a reallocation is
- * triggered with an additional chunk.
- */
-void ampi_check_tape_size(long int size);
+/** Create a tape handle*/
+ampi_tape_entry* ampi_create_tape(long int size);
 
 #endif

@@ -49,30 +49,30 @@ extern "C" {
   }
 
 
-  extern "C" void ampi_reset_entry(long int idx);
+  extern "C" void ampi_reset_entry(void* handle);
 
   struct AMPI_data : tape::external_function_base_data  {
-	int idx;
-	AMPI_data(const int nidx) : idx(nidx) {}
+	void* handle;
+	AMPI_data(void* handle) : handle(handle) {}
 	virtual ~AMPI_data() {
 //std::cout << "ampi_reset_entry with idx=" << idx << std::endl;
-		ampi_reset_entry(idx);
+		ampi_reset_entry(handle);
 	}
   };  
 
   void ampi_tape_wrapper(tape &caller, const tape::interpretation_settings &settings, dco::a1s::tape::external_function_base_data *userdata) {
 	AMPI_data *data = static_cast<AMPI_data*>(userdata);
-    	ampi_interpret_tape(data->idx);
+    	ampi_interpret_tape(data->handle);
   }
 
 
-  void ampi_create_tape_entry(long int *i) {
+  void ampi_create_tape_entry(void* handle) {
     if(!global_tape->is_active()) {
 //	std::cout << "tape is passive, not AMPI Callback will be created!" << std::endl;
 	return;
     }
     //todo: insert an external function handler!!!
-    global_tape->register_external_function(&ampi_tape_wrapper, new AMPI_data(*i));
+    global_tape->register_external_function(&ampi_tape_wrapper, new AMPI_data(handle));
  //   ampi_counter++;
  //   std::cout << "ampi_counter: " << ampi_counter << endl;
     

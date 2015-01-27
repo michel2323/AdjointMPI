@@ -45,11 +45,13 @@
 #define AMPI_MAX   4
 /**@}*/
 
+typedef struct ampi_tape_entry ampi_tape_entry;
+
 /**
  * AMPI request, replacing the MPI request 
  */
 typedef struct AMPI_Request {
-    MPI_Request *request; /**< Original request */
+    MPI_Request *mpiRequest; /**< Original request */
     MPI_Status status; /**< Original status */
     MPI_Comm comm; /**< Original communicator */
 
@@ -59,7 +61,7 @@ typedef struct AMPI_Request {
     int tag;              /**< MPI tag */
     double *v;            /**< Incoming or outgoing values of the mapped active buffer. */
     double *a;            /**< Incoming or outgoing adjoints of the mapped tape. */
-    long int va;          /**< Tape index */
+    ampi_tape_entry* va;  /**< Tape index */
     int oc;               /**< Operation code */
     int dest;             /**< Destination or source. */
     int size;             /**< Size of the buffer. */
@@ -170,6 +172,22 @@ int AMPI_Finalize_b();
  * @return error code 
  */
 int AMPI_Send_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
+
+/**
+ * Active forward buffered send.
+ *
+ * The forward send amounts to a wrapper of the MPI_Send.
+ *
+ * @param buf Buffer with values that are to be sent
+ * @param count Number of buffer elements
+ * @param datatype MPI data type of the buffer elements
+ * @param dest Rank of destination process
+ * @param tag Message tag
+ * @param comm MPI communicator
+ *
+ * @return error code
+ */
+int AMPI_Bsend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
 
 /**
  * Active reverse send. 
@@ -430,7 +448,7 @@ int AMPI_Bcast_b(double *buf, int count, MPI_Datatype datatype, int root, MPI_Co
  *
  * @return error code 
  */
-int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm);
+int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, ampi_stack** stack);
 
 /**
  * Reverse active reduction. The adjoint of a reduction is a broadcast
@@ -450,7 +468,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
  *
  * @return error code 
  */
-int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm);
+int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, ampi_stack* stack);
 
 /**
  * Forward active allreduce. See corresponding papers for additional
@@ -471,7 +489,7 @@ int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
  *
  * @return error code 
  */
-int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack** stack);
 
 /**
  * Reverse active allreduce. All the adjoints of all the processes have
@@ -487,7 +505,7 @@ int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype d
  *
  * @return error code 
  */
-int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm);
+int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack* stack);
 
 /**
  * Active forward gather. MPI_Gather wrapper. 
@@ -531,4 +549,7 @@ int AMPI_Sendrecv_replace_f(double *buf, int count, MPI_Datatype datatype, int d
  */
 int AMPI_Sendrecv_replace_b(double *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
 
+int AMPI_Sendrecv_f(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest, int sendtag, void *recvbuf, int recvcount, MPI_Datatype recvtype, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
+
+int AMPI_Sendrecv_b(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest, int sendtag, void *recvbuf, int recvcount, MPI_Datatype recvtype, int source, int recvtag, MPI_Comm comm, MPI_Status *status);
 #endif
