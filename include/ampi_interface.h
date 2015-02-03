@@ -17,10 +17,10 @@
 void ampi_interpret_tape(long int idx);
 void ampi_reset_entry(long int idx);
 
-/** Get a value v from a specific tape entry with index idx */
+/** Get a value *v from a specific tape variable buf[i] */
 extern void ampi_get_val(void* buf, int* i, double* v);
 
-/** Get a value v from a specific tape variable buf[i] */
+/** Set a value *v from a specific tape variable buf[i] */
 extern void ampi_set_val(void* buf, int* i, double* v);
 
 /** Get an adjoint a from a specific tape entry with index idx */

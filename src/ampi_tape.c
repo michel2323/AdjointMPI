@@ -302,13 +302,18 @@ int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
     }
 }
 
-int AMPI_Waitall(int count, MPI_Request *mpi_request, MPI_Status *status) {
+int AMPI_Waitall(int count, MPI_Request *array_of_requests, MPI_Status *array_of_statuses) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
     int i=0;
     for(i=0;i<count;i=i+1) {
-	AMPI_Wait(&mpi_request[i],&status[i]);
+        if(array_of_statuses==MPI_STATUSES_IGNORE) {
+	  AMPI_Wait(&array_of_requests[i],MPI_STATUS_IGNORE);
+	}
+        else {
+	  AMPI_Wait(&array_of_requests[i],&array_of_statuses[i]);
+	}
     }
     return 0;
 }
