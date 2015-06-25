@@ -45,7 +45,7 @@
 #define AMPI_MAX   4
 /**@}*/
 
-typedef struct ampi_tape_entry ampi_tape_entry;
+struct ampi_tape_entry;
 
 /**
  * AMPI request, replacing the MPI request 
@@ -61,7 +61,7 @@ typedef struct AMPI_Request {
     int tag;              /**< MPI tag */
     double *v;            /**< Incoming or outgoing values of the mapped active buffer. */
     double *a;            /**< Incoming or outgoing adjoints of the mapped tape. */
-    ampi_tape_entry* va;  /**< Tape index */
+    struct ampi_tape_entry* va;  /**< Tape index */
     int oc;               /**< Operation code */
     int dest;             /**< Destination or source. */
     int size;             /**< Size of the buffer. */
