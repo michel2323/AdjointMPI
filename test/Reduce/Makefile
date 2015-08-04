@@ -3,7 +3,7 @@ include ../Makefile.inc
 NPROC=4
 PSIZE=10
 
-DCO_INCLUDE=$(DCO_BASE_DIR)/src/dco
+DCO_INCLUDE=$(DCO_BASE_DIR)/build
 
 CXXFLAGS=-g  -O0 -I$(DCO_INCLUDE) $(DCO_FLAGS)
 

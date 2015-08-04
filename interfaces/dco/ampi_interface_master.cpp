@@ -25,7 +25,7 @@ void ampi_get_idx(void *buf, int *i, INT64 *idx) {
         *idx=0;
     }
     else {
-        *idx = var._data().tape_index();
+        *idx = dco::tape_index(var);
     }
 }
 
@@ -39,7 +39,7 @@ void ampi_set_adj(INT64 *idx, double *x) {
 
 /*extern "C" */void ampi_reset_entry(long int idx);
 
-struct AMPI_data : AD_MODE::tape::external_function_base_data  {
+struct AMPI_data : AD_MODE::callback_object_t::callback_object_base  {
     int idx;
     AMPI_data(const int nidx) : idx(nidx) {}
     virtual ~AMPI_data() {
@@ -57,7 +57,10 @@ void ampi_create_tape_entry(long int *i) {
     if(AD_MODE::global_tape == NULL || !AD_MODE::global_tape->is_active()) {
         return;
     }
-    AD_MODE::global_tape->create_ext_fcn_data<AMPI_data>(&ampi_tape_wrapper, *i);
+    AD_MODE::global_tape->insert_callback(
+        &ampi_tape_wrapper,
+        AD_MODE::global_tape->create_callback_object<AMPI_data>(*i)
+    );
 }
 
 void ampi_create_dummies(void *buf, int *size) {

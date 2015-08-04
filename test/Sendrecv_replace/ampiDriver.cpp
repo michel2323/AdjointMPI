@@ -35,7 +35,7 @@ void comp(active *x, active &y, int &n) {
 
 int main(int argc, char *argv[]) {
   AMPI_Init(&argc, &argv);
-  dco::ga1s<double>::global_tape = dco::ga1s<double>::tape::create(1e4);
+  dco::ga1s<double>::global_tape = dco::ga1s<double>::tape_t::create(1e4);
   active h=1e-6;
   if(argc<2) {
     cout << "Not enough arguments. Missing problem size." << endl;
