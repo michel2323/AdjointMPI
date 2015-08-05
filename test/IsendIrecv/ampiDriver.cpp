@@ -6,9 +6,9 @@
 
 using namespace std;
 
-typedef dco::a1s::type active;
+typedef dco::ga1s<double>::type active;
 
-dco::a1s::tape *dco::a1s::global_tape=0;
+
 
 void comp(active *x, active &y, int &n) {
   int rank;
@@ -40,7 +40,7 @@ void comp(active *x, active &y, int &n) {
 
 int main(int argc, char *argv[]) {
   AMPI_Init(&argc, &argv);
-  dco::a1s::global_tape = dco::a1s::tape::create(1e4);
+  dco::ga1s<double>::global_tape = dco::ga1s<double>::tape_t::create(1e4);
   active h=1e-6;
   if(argc<2) {
     cout << "Not enough arguments. Missing problem size." << endl;
@@ -62,20 +62,21 @@ int main(int argc, char *argv[]) {
   for(int i=0;i<n;i++) x[i]=(active) i;
   if(rank==0) {
     for(int i=0;i<n;i++)
-      dco::a1s::global_tape->register_variable(x[i]);
+      dco::ga1s<double>::global_tape->register_variable(x[i]);
   }
   active *x_saved=new active[n];
   for(int i=0;i<n;i++) x_saved[i]=x[i];
   comp(x,y,n);
   cout << "Result:" << y << endl;
   cout << "Derivatives:" << endl;
-  if(rank == 0) dco::a1s::set(y, 1., -1);
-  if(rank == 1) dco::a1s::set(y, 0., -1);
-  dco::a1s::global_tape->interpret_adjoint();
+  if(rank == 0) dco::ga1s<double>::set(y, 1., -1);
+  if(rank == 1) dco::ga1s<double>::set(y, 0., -1);
+  MPI_Barrier(MPI_COMM_WORLD);
+  dco::ga1s<double>::global_tape->interpret_adjoint();
   //if(rank == 0) {
     double g=0;
     for(int i=0;i<n;i++) {
-      dco::a1s::get(x_saved[i], g, -1);
+      dco::ga1s<double>::get(x_saved[i], g, -1);
       cout << g << endl;
     }
     //}
