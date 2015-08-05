@@ -99,6 +99,11 @@ int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag
     return ierr;
 }
 
+int AMPI_Brecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status) {
+    int ierr=0;
+    ierr=MPI_Bsend(buf, count, datatype, dest, tag, comm);
+    return ierr;
+}
 /* Non blocking communication */
 
 int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {

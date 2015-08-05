@@ -103,7 +103,9 @@ int AMPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       return MPI_Bsend(buf, count, datatype, dest, tag, comm);
     }
     int i=0;
-    double *primalValues = (double*) malloc(sizeof(double)*count);
+    /*Allocate one more element and hint that it is a Bsend*/
+    double *primalValues = (double*) malloc(sizeof(double)*(count+1));
+    primalValues[count]=1;
 
     for(i=0;i<count;i=i+1) {
         ampi_get_val(buf,&i,&primalValues[i]);
@@ -123,6 +125,7 @@ int AMPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 
       /*create actual MPI entry*/
 
+      /*BSEND is adjoined like a SEND. The corresponding RECV is adjoined as a BSEND!*/
       ampi_tape->oc = SEND;
       ampi_tape->arg[0] = count;
       ampi_tape->arg[1] = dest;
@@ -130,7 +133,7 @@ int AMPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       ampi_tape->tag = tag;
     }
 
-    int exitCode = AMPI_Bsend_f(primalValues, count, datatype, dest, tag, comm);
+    int exitCode = AMPI_Bsend_f(primalValues, count+1, datatype, dest, tag, comm);
 
     free(primalValues);
 
@@ -146,8 +149,13 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     }
 
     int i=0;
-    double *primalValues = (double*) malloc(sizeof(double)*count);
+    /*One element longer to distinguish between Bsend and Send of the received message*/
+    double *primalValues = (double*) malloc(sizeof(double)*(count+1));
+    /* set to 0. if this is a 1, the received message was a Bsend */
+    primalValues[count]=0;
 
+    int exitCode = AMPI_Recv_f(primalValues, count+1, datatype, dest, tag, comm, status);
+    /*if 1, it is a BSEND on the other end*/
     if (ampi_is_tape_active()){
       ampi_tape_entry* ampi_tape = ampi_create_tape(count+1);
       ampi_tape->arg=(int*) malloc(sizeof(int)*2);
@@ -156,7 +164,6 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 
       ampi_create_tape_entry((void*)ampi_tape);
 
-      ampi_tape->oc = RECV;
       ampi_tape->arg[0] = count;
       ampi_tape->arg[1] = dest;
       ampi_tape->comm = comm;
@@ -167,13 +174,15 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
       }
 
       for(i=0;i<count;i=i+1) {
-        /*ampi_get_idx(buf, &i, &tmp_int64);*/
         ampi_get_idx(buf, &i, &ampi_tape->idx[i]);
-        /*ampi_tape[ampi_vac+i+1].idx = tmp_int64;*/
+      }
+      if(primalValues[count]==1) {
+        ampi_tape->oc=BRECV;
+      }
+      else {
+        ampi_tape->oc=RECV;
       }
     }
-
-    int exitCode = AMPI_Recv_f(primalValues, count, datatype, dest, tag, comm, status);
 
     for(i=0;i<count;i=i+1) {
         ampi_set_val(buf, &i, &primalValues[i]);
@@ -245,7 +254,11 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       return MPI_Irecv(buf, count, datatype, dest, tag, comm, mpi_request);
     }
     int i=0;    
-    double * tmp = (double*) malloc(sizeof(double)*count);
+    /* One more element. Could be a Bsend on the other side. This is only
+     * important to avoid deadlocks in the blocking case. Irrelevant in this
+     * case, however the element needs to be there */
+    double * tmp = (double*) malloc(sizeof(double)*(count+1));
+    tmp[count]=0;
 
     AMPI_Request primalRequest;
     /*INT64 tmp_int64 = 0;*/
@@ -276,7 +289,7 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       primalRequest.va = ampi_tape;
     }
 
-    int temp = AMPI_Irecv_f(tmp, count, datatype, dest, tag, comm, &primalRequest);
+    int temp = AMPI_Irecv_f(tmp, count+1, datatype, dest, tag, comm, &primalRequest);
 
     /*point current primalRequest index to this tape entry*/
     ht_el->request= primalRequest;
@@ -1088,6 +1101,21 @@ void ampi_interpret_tape(void* handle){
       comm=ampi_tape->comm;
 #endif
       AMPI_Recv_b(tmp_d, ampi_tape->arg[0], MPI_DOUBLE, ampi_tape->arg[1], ampi_tape->tag, comm,&status);
+      free(tmp_d);
+      break;
+        }
+  case BRECV : {
+      tmp_d = (double*) malloc(sizeof(double)*ampi_tape->arg[0]);
+      for(j=0;j<ampi_tape->arg[0];j=j+1) {
+          ampi_get_adj(&ampi_tape->idx[j], &tmp_d[j]);
+#ifdef DEBUG
+          printf("BRECV: %d %e\n", tmp_entry->idx, tmp_d[j]);
+#endif
+      } 
+#ifdef NO_COMM_WORLD
+      comm=ampi_tape->comm;
+#endif
+      AMPI_Brecv_b(tmp_d, ampi_tape->arg[0], MPI_DOUBLE, ampi_tape->arg[1], ampi_tape->tag, comm,&status);
       free(tmp_d);
       break;
         }
