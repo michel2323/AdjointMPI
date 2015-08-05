@@ -221,9 +221,6 @@ Derivatives:
 4.2083
 6.26972
 13.9803
-AMPI chunk size: 500000
-AMPI chunks allocated: 1
-AMPI memory allocated: 24000000
 Problem size: 10
 Result:0
 Derivatives:
@@ -267,9 +264,6 @@ Derivatives:
 0
 0
 0
-AMPI chunk size: 500000
-AMPI chunks allocated: 1
-AMPI memory allocated: 24000000
 Problem size: 10
 Result:0
 Derivatives:
@@ -313,9 +307,6 @@ Derivatives:
 0
 0
 0
-AMPI chunk size: 500000
-AMPI chunks allocated: 1
-AMPI memory allocated: 24000000
 Problem size: 10
 Result:0
 Derivatives:
@@ -359,6 +350,3 @@ Derivatives:
 0
 0
 0
-AMPI chunk size: 500000
-AMPI chunks allocated: 1
-AMPI memory allocated: 24000000

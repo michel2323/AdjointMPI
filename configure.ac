@@ -9,14 +9,14 @@ AM_INIT_AUTOMAKE([-Wall -Werror])
 m4_pattern_allow([AM_PROG_AR])
 #AM_PROG_AR([act-if-fail])
 
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_CPP
 AC_PROG_RANLIB
 AC_LANG([C])
-AC_HEADER_STDC
-
 AM_PROG_AR
 
 
@@ -42,8 +42,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor memset pow sqrt])
 
-AC_CONFIG_FILES([Makefile
-		 src/Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_SUBST(MPICC)
 AC_SUBST(MPI_INC_DIR)
 AC_SUBST(MPI_LIB_DIR)

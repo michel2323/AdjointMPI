@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
   cout << "Derivatives:" << endl;
   if(rank == 0) dco::ga1s<double>::set(y, 1., -1);
   if(rank == 1) dco::ga1s<double>::set(y, 0., -1);
+  MPI_Barrier(MPI_COMM_WORLD);
   dco::ga1s<double>::global_tape->interpret_adjoint();
   //if(rank == 0) {
     double g=0;

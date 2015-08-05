@@ -31,7 +31,7 @@ fdDriver.o: fdDriver.cpp
 	${MPICXX} $(CXXFLAGS) -c -o $@ fdDriver.cpp 
 
 ampiDriver: ampiDriver.o ampi_interface.o
-	$(MPICXX) $(CXXFLAGS) -o $@ ampiDriver.o ampi_interface.o $(AMPI_DIR)/src/libAMPI.a
+	$(MPICXX) $(CXXFLAGS) -o $@ ampiDriver.o ampi_interface.o $(AMPI_DIR)/libAMPI.a
 
 ampiDriver.o: ampiDriver.cpp
 	$(MPICXX) $(CXXFLAGS) -I$(AMPI_DIR)/include -c -o $@ ampiDriver.cpp

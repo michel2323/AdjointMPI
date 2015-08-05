@@ -14,8 +14,8 @@
 #define INT64 long int
 
 /** Call AMPI tape interpreter from external tape */
-void ampi_interpret_tape(long int idx);
-void ampi_reset_entry(long int idx);
+void ampi_interpret_tape(void* handle);
+void ampi_reset_entry(void* handle);
 
 /** Get a value *v from a specific tape variable buf[i] */
 extern void ampi_get_val(void* buf, int* i, double* v);
@@ -33,7 +33,7 @@ extern void ampi_set_adj(INT64*, double*);
 extern void ampi_get_idx(void* buf, int* i, INT64* idx);
 
 /** Create a tape entry in the external tape, indicating an external AMPI call */
-extern void ampi_create_tape_entry(long int* i);
+extern void ampi_create_tape_entry(void* handle);
 
 /** Create size tape entries to store the values of buf. Refer to receive buffer without
  * initialization */
