@@ -318,6 +318,7 @@ int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
     if (ampi_is_tape_active()){
       ampi_tape_entry *ampi_tape = ampi_create_tape(1);
       ampi_tape->oc = WAIT;
+      ampi_tape->tag=primalRequest.tag;
       ampi_tape->request = primalRequest.va->request;
       *primalRequest.va->request = primalRequest;
       /*ampi_tape->primalRequest->a = &ampi_tape[primalRequest->va].d;*/
@@ -895,8 +896,6 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
   }
     int i=0;
     double * tmp = (double*) malloc(sizeof(double)*count);
-    /*This may be important for the openmp loop*/
-    /*INT64 tmp_int64 = 0;*/
     for(i=0;i<count;i=i+1) {
         ampi_get_val(buf,&i,&tmp[i]);
     }
@@ -928,7 +927,7 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
       }
 
       for(i=0;i<count;i=i+1) {
-          ampi_set_val(buf, &i, &tmp[i]);
+          ampi_get_idx(buf, &i, &ampi_tape->idx[count+i]);
       }
     }
 
@@ -1140,6 +1139,7 @@ void ampi_interpret_tape(void* handle){
       }
       ampi_tape->request->a = tmp_d;
       ampi_tape->request->mpiRequest =(MPI_Request*) malloc(sizeof(MPI_Request));
+      ampi_tape->request->tag=ampi_tape->request->va->tag;
 #ifndef NO_COMM_WORLD 
       ampi_tape->request->comm=MPI_COMM_WORLD;
 #endif

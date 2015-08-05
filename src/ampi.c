@@ -182,7 +182,6 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
     int i=0;
 #endif
     if(request->oc == AMPI_IS) {
-        request->tag=0;
 	return MPI_Irecv(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->mpiRequest);
     }
     else {
@@ -194,7 +193,6 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 	    }
 	    printf("\n");
 #endif
-        request->tag=0;
 	    return MPI_Isend(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->mpiRequest);
 	} else { 
 	    printf("Error: OC invalid\n");
