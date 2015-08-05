@@ -1,0 +1,56 @@
+Problem size: 10
+Result:-1.57886
+Problem size: 10
+Result:0
+Problem size: 10
+Result:-1.57886
+Derivatives:
+9.99645e-07
+1.0806
+-2.61457
+-5.46679
+-7.66127
+9.91204
+-1.53549
+4.20839
+6.2696
+13.9805
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Problem size: 10
+Result:-1.57886
+Derivatives:
+0
+1.0806
+-2.61457
+-5.46678
+-7.66128
+9.91203
+-1.53556
+4.2083
+6.26972
+13.9803
+Problem size: 10
+Result:0
+Derivatives:
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
