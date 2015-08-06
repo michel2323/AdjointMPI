@@ -39,4 +39,4 @@ Interface Files
   
 Test
 -----------------
-/test                   The unit tests currenctly only work with dco_cpp
+/test                   The unit tests currently only work with dco_cpp
