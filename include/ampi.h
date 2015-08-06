@@ -239,6 +239,12 @@ int AMPI_Recv_f(double *buf, int count, MPI_Datatype datatype, int src, int tag,
  */
 int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status);
 
+
+/**
+ * Documentation TODO for Michel
+ */
+int AMPI_Brecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status);
+
 /* Non blocking communication */
 
 /**
