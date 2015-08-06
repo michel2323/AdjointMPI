@@ -113,7 +113,8 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IS;
-    request->size = count;
+    /*buffer is one side too big for the Bsend flag*/
+    request->size = count-1;
     /*request->tag = tag;*/
     request->comm = comm;
 #ifdef DEBUG
@@ -150,7 +151,8 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IR;
-    request->size = count;
+    /*buffer is one side too big for the Bsend flag*/
+    request->size = count-1;
     /*request->tag = tag;*/
     request->comm = comm;
     return MPI_Irecv(buf, count, datatype, dest, tag, comm, request->mpiRequest);
@@ -180,6 +182,10 @@ int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
     int ierr=0;
     ierr=MPI_Wait(request->mpiRequest, status);
     return ierr;
+}
+
+int AMPI_Waitany_f(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status) {
+    return MPI_Waitany(count,array_of_requests,index,status);
 }
 
 int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {

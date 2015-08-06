@@ -10,20 +10,25 @@ void comp(double *x, double &y, int &n) {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   double *buf=new double[n];
   y=0;
+  MPI_Request request[2];
   if(rank==0) {
     for(int i=0;i<n;i++) x[i]=x[i]*x[i];
-    MPI_Sendrecv(x,n,MPI_DOUBLE,1,0,buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    MPI_Irecv(buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[0]);
+    MPI_Isend(x,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[1]);
+    MPI_Wait(&request[0],MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) {
       y+=buf[i];
     }
   }
   if(rank==1) {
-    MPI_Recv(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    MPI_Irecv(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[0]);
+    MPI_Wait(&request[0],MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) { 
       buf[i]=sin(buf[i]);
     }
-    MPI_Send(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD);
+    MPI_Isend(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[1]);
   }
+  MPI_Wait(&request[1],MPI_STATUS_IGNORE);
   delete [] buf;
 }
 
