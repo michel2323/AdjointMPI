@@ -1,1 +1,0 @@
-../../interfaces/dco/ampi_interface_master.cpp
