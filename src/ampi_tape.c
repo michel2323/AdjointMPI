@@ -354,8 +354,14 @@ int AMPI_Waitall(int count, MPI_Request *mpi_request, MPI_Status *status) {
     ampi_comm_count=ampi_comm_count+1;
 #endif
     int i=0;
-    for(i=0;i<count;i=i+1) {
-      AMPI_Wait(&mpi_request[i],&status[i]);
+    if (status != MPI_STATUSES_IGNORE) {
+        for(i=0; i<count; i=i+1) {
+            AMPI_Wait(&mpi_request[i],&status[i]);
+        }
+    } else {
+        for(i=0; i<count; i=i+1) {
+            AMPI_Wait(&mpi_request[i],status);
+        }
     }
     return 0;
 }
