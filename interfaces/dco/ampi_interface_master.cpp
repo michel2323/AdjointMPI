@@ -52,10 +52,8 @@ struct AMPI_data : AD_MODE::callback_object_t::callback_object_base  {
 };
 
 void ampi_tape_wrapper(AMPI_data *data) {
-  ampi_tape_entry* ampi_tape;
-  ampi_tape=(ampi_tape_entry*) data->handle;
   ampi_interpret_tape(data->handle);
-  }
+}
 
 
 void ampi_create_tape_entry(void* handle) {

@@ -12,9 +12,9 @@ void comp(double *x, double &y, int &n) {
   y=0;
   if(rank==0) {
     for(int i=0;i<n;i++) x[i]=x[i]*x[i];
-    MPI_Sendrecv_replace(x,n,MPI_DOUBLE,1,0,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+    MPI_Sendrecv(x,n,MPI_DOUBLE,1,0,buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     for(int i=0;i<n;i++) {
-      y+=x[i];
+      y+=buf[i];
     }
   }
   if(rank==1) {

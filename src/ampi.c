@@ -99,6 +99,11 @@ int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag
     return ierr;
 }
 
+int AMPI_Brecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status) {
+    int ierr=0;
+    ierr=MPI_Bsend(buf, count, datatype, dest, tag, comm);
+    return ierr;
+}
 /* Non blocking communication */
 
 int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
@@ -108,7 +113,8 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IS;
-    request->size = count;
+    /*buffer is one side too big for the Bsend flag*/
+    request->size = count-1;
     /*request->tag = tag;*/
     request->comm = comm;
 #ifdef DEBUG
@@ -123,29 +129,26 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     int i = 0;
-    if(!request->aw) {
-	MPI_Wait(request->mpiRequest, MPI_STATUS_IGNORE);
-	for(i = 0 ; i < request->size ; i++) {
-	    buf[i] = request->a[i];
-	}
-#ifdef DEBUG
-	printf("AMPI_Isend_b: ");
-	for(i = 0 ; i < request->size ; i++) {
-	    printf("%f ", buf[i]);
-	}
-	printf("\n");
-#endif
-	return MPI_SUCCESS;
-    } else {
-	return MPI_SUCCESS;
+    MPI_Wait(request->mpiRequest, MPI_STATUS_IGNORE);
+    for(i = 0 ; i < request->size ; i++) {
+      buf[i] = request->a[i];
     }
+#ifdef DEBUG
+    printf("AMPI_Isend_b: ");
+    for(i = 0 ; i < request->size ; i++) {
+      printf("%f ", buf[i]);
+    }
+    printf("\n");
+#endif
+    return MPI_SUCCESS;
 }
 
 int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IR;
-    request->size = count;
+    /*buffer is one side too big for the Bsend flag*/
+    request->size = count-1;
     /*request->tag = tag;*/
     request->comm = comm;
     return MPI_Irecv(buf, count, datatype, dest, tag, comm, request->mpiRequest);
@@ -153,28 +156,28 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 
 int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
     int i = 0;
-    if(!request->aw) {
-	MPI_Wait(request->mpiRequest, &request->status);
-	for(i = 0 ; i < request->size ; i++) {
-	    buf[i] = request->a[i];
-	}
-#ifdef DEBUG
-	printf("AMPI_Irecv_b: ");
-	for(i = 0 ; i < request->size ; i++) {
-	    printf("%f ", buf[i]);
-	}
-	printf("\n");
-#endif
-	return MPI_SUCCESS;
-    } else {
-	return MPI_SUCCESS;
+    MPI_Wait(request->mpiRequest, &request->status);
+    for(i = 0 ; i < request->size ; i++) {
+        buf[i] = request->a[i];
     }
+#ifdef DEBUG
+    printf("AMPI_Irecv_b: ");
+    for(i = 0 ; i < request->size ; i++) {
+        printf("%f ", buf[i]);
+    }
+    printf("\n");
+#endif
+    return MPI_SUCCESS;
 }
 
 int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
     int ierr=0;
     ierr=MPI_Wait(request->mpiRequest, status);
     return ierr;
+}
+
+int AMPI_Waitany_f(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status) {
+    return MPI_Waitany(count,array_of_requests,index,status);
 }
 
 int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
@@ -227,25 +230,6 @@ int AMPI_Waitall_b(int count, AMPI_Request *requests, MPI_Status *status) {
     return MPI_SUCCESS;
 }
 
-/* Anti Waitall. Experimental */
-
-int AMPI_Awaitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
-    int i = 0;
-    for(i = 0 ; i < count ; i++) {
-	requests[i].aw = 1;
-    }
-    return MPI_SUCCESS;
-}
-
-int AMPI_Awaitall_b(int count, AMPI_Request *requests, MPI_Status *status) {
-    int i = 0;
-    for(i = 0 ; i < count ; i++) {
-	if(requests[i].aw) {
-	    MPI_Wait(requests[i].mpiRequest, &requests[i].status);
-	}
-    }
-    return MPI_SUCCESS;
-}
 
 /* Collective Communication */
 

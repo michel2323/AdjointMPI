@@ -1,9 +1,0 @@
-CC=mpicc
-CXX=mpicxx
-CFLAGS=-O4 -DDCO_DEFAULT 
-CXXFLAGS=-O4 -DDCO_DEFAULT
-
-AMPI_LIBDIR=../../src
-AMPI_INCLUDE=../../include
-
-DCO_INCLUDE=$(DCO_BASE_DIR)/src/dco

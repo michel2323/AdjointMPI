@@ -65,7 +65,6 @@ typedef struct AMPI_Request {
     int oc;               /**< Operation code */
     int dest;             /**< Destination or source. */
     int size;             /**< Size of the buffer. */
-    long int aw;          /**< Anti wait flag*/
 } AMPI_Request;
 
 
@@ -239,6 +238,12 @@ int AMPI_Recv_f(double *buf, int count, MPI_Datatype datatype, int src, int tag,
  */
 int AMPI_Recv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status);
 
+
+/**
+ * Documentation TODO for Michel
+ */
+int AMPI_Brecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status *status);
+
 /* Non blocking communication */
 
 /**
@@ -350,6 +355,17 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status *status);
  * @return error code 
  */
 int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status);
+
+/**
+ * Forward waitany. 
+ * 
+ * @param count Number of requests
+ * @param requests MPI requests
+ * @param status Original statuses
+ *
+ * @return error code 
+ */
+int AMPI_Waitany_f(int count, MPI_Request array_of_request[], int *index, MPI_Status *status);
 
 /**
  * Active reverse waitall. This marks a performance loss in the active

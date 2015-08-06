@@ -63,6 +63,7 @@
 #define START 20
 #define STARTALL 21
 #define SENDRECV 22
+#define BRECV 23
 /**@}*/
 
 #include <stdlib.h>
@@ -181,13 +182,6 @@ int AMPI_Waitall(int , MPI_Request *, MPI_Status *);
  *
  */
 int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status);
-
-/**
- * Experimental implementation of an anti-waitall. See the corresponding paper
- * for more information.
- */
-int AMPI_Awaitall(int , AMPI_Request *, MPI_Status *);
-
 
 /**
  * @brief Active broadcast. 

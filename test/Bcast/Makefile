@@ -5,7 +5,7 @@ PSIZE=10
 
 DCO_INCLUDE=$(DCO_BASE_DIR)/build
 
-CXXFLAGS=-g  -O0 -I$(DCO_INCLUDE) $(DCO_FLAGS)
+
 
 all: driver.out fdDriver.out ampiDriver.out
 
