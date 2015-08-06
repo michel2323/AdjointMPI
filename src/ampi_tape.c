@@ -17,29 +17,6 @@ int ampi_comm_count=0;
 
 AMPI_ht_el *AMPI_ht=NULL;
 ampi_tape_entry *ampi_tape;
-/*int ampi_tape_counter = 0;*/
-long int ampi_vac=0;
-long int ampi_vac_stored=0;
-long int ampi_chunks=1;
-
-int AMPI_Reset_Tape() {
-    ampi_vac=0;
-    /* output is deprecated */
-    /*printf("AMPI tape has been reset.\n");*/
-    return 0;
-}
-
-int AMPI_Store_State() {
-    ampi_vac_stored = ampi_vac;
-
-    return 0;
-}
-
-int AMPI_Restore_State() {
-    ampi_vac = ampi_vac_stored;
-
-    return 0;
-}
 
 int AMPI_Init(int* argc, char*** argv) {
     return AMPI_Init_f(argc, argv);
