@@ -30,6 +30,7 @@ void comp(double *x, double &y, int &n) {
     MPI_Isend(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[1]);
   }
   MPI_Waitany(2,request,&indx,MPI_STATUS_IGNORE);
+  MPI_Waitany(2,request,&indx,MPI_STATUS_IGNORE);
   delete [] buf;
 }
 

@@ -10,6 +10,7 @@ void comp(double *x, double &y, int &n) {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   double *buf=new double[n];
   y=0;
+  int indx=-1;
   MPI_Request request[2];
   if(rank==0) {
     for(int i=0;i<n;i++) x[i]=x[i]*x[i];
@@ -28,7 +29,8 @@ void comp(double *x, double &y, int &n) {
     }
     MPI_Isend(buf,n,MPI_DOUBLE,0,0,MPI_COMM_WORLD,&request[1]);
   }
-  MPI_Wait(&request[1],MPI_STATUS_IGNORE);
+  MPI_Waitany(2,request,&indx,MPI_STATUS_IGNORE);
+  MPI_Waitany(2,request,&indx,MPI_STATUS_IGNORE);
   delete [] buf;
 }
 
