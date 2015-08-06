@@ -1,5 +1,7 @@
 INDENTATION_OK=@echo " -> OK "
 
+CXXFLAGS=-O3 -I$(DCO_INCLUDE) $(DCO_FLAGS)
+
 MPICC=mpicc
 
 MPICXX=mpicxx
