@@ -967,8 +967,8 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
     return MPI_Sendrecv(sendbuf, sendcount, sendtype, dest, sendtag, recvbuf,recvcount,recvtype,source,recvtag,comm,status);
   }
 
-    double * sendtmp = malloc(sizeof(double)*sendcount);
-    double * recvtmp = malloc(sizeof(double)*recvcount);
+    double * sendtmp = (double*) malloc(sizeof(double)*sendcount);
+    double * recvtmp = (double*) malloc(sizeof(double)*recvcount);
 
     int i=0;
 
@@ -979,7 +979,7 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
     if (ampi_is_tape_active()){
       /*create actual MPI entry*/
       ampi_tape_entry* ampi_tape = ampi_create_tape(sendcount+recvcount+2);
-      ampi_tape->arg=malloc(sizeof(int)*6);
+      ampi_tape->arg = (int*) malloc(sizeof(int)*6);
 
 
       for(i=0;i<sendcount;i=i+1) {
