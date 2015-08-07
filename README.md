@@ -1,3 +1,5 @@
+#What is AdjointMPI?
+
 The AMPI library is used to reverse MPI communication in the context of 
 algorithmic differentiation (AD). In principal, the reversal may be 
 used for other purposes. The library was closely developed with dco_cpp, 
@@ -6,8 +8,7 @@ The interface is specifically crafted in such a way that coupling
 with any AD tool should be straightforward. Please refer to the more
 in depth documentation created by 'make doc'.
 
-Source Files
-----------
+#Source Files
 
 /src 		        All AMPI library source files.
 
@@ -20,8 +21,8 @@ Source Files
 
 /include 		All AMPI library header files.
 
-Interface Files
-----------
+#Interface Files
+
 /interfaces 		AD Tool interfaces. They are not part of the AMPI library
 			and should be considered as integration examples for
 			other AD Tools.
@@ -37,6 +38,6 @@ Interface Files
   dcc_mpi.hpp		reverse AMPI interface.
 - ampi_interface_master.cpp     dco master branch interface.
   
-Test
------------------
+#Test
+
 /test                   The unit tests currently only work with dco_cpp
