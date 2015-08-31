@@ -17,7 +17,7 @@ AM_PROG_CC_C_O
 AC_PROG_CPP
 AC_PROG_RANLIB
 AC_LANG([C])
-AM_PROG_AR
+#AM_PROG_AR
 
 
 AC_CHECK_LIB([m], [sqrt],,AC_MSG_ERROR(Could not find -lm libary.))
