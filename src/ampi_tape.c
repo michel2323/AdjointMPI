@@ -15,7 +15,6 @@
 int ampi_comm_count=0;
 #endif
 
-AMPI_ht_el *AMPI_ht=NULL;
 ampi_tape_entry *ampi_tape;
 
 int AMPI_Init(int* argc, char*** argv) {
@@ -168,12 +167,15 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     return exitCode;
 }
 
-int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *mpi_request_p) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
+
+    AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
+
     if(datatype!=AMPI_DOUBLE) {
-      return MPI_Isend(buf, count, datatype, dest, tag, comm, mpi_request);
+      return MPI_Isend(buf, count, datatype, dest, tag, comm, &mpi_request->mpiRequest);
     }
     int i=0, temp;
     double *primalValues = (double*) malloc(sizeof(double)*count);
@@ -182,14 +184,7 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       ampi_get_val(buf,&i,&primalValues[i]);
     }
 
-    /*new AMPI primalRequest*/
-    AMPI_Request primalRequest;
-    /*new hash element*/
-    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
-    ht_el->key=mpi_request;
-
-    primalRequest.buf = buf;
-    primalRequest.mpiRequest =mpi_request;
+    mpi_request->buf = buf;
 
     if (ampi_is_tape_active()){
 
@@ -208,26 +203,27 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       ampi_tape->tag = tag;
 
       ampi_create_tape_entry((void*)ampi_tape);
-      ampi_tape->request = (AMPI_Request*) malloc(sizeof(AMPI_Request));
-      primalRequest.va = ampi_tape;
+      ampi_tape->request = (AMPI_Request_t*) malloc(sizeof(AMPI_Request_t));
+      mpi_request->va = ampi_tape;
 
     }
 
     /*point current primalRequest index to this tape entry*/
-    primalRequest.v = primalValues;
-    temp = AMPI_Isend_f(primalValues, count, datatype, dest, tag, comm, &primalRequest);
-    ht_el->request= primalRequest;
-    HASH_ADD_PTR(AMPI_ht,key,ht_el);
+    mpi_request->v = primalValues;
+    temp = AMPI_Isend_f(primalValues, count, datatype, dest, tag, comm, mpi_request_p);
 
     return temp;
 }
 
-int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *mpi_request_p) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
+
+    AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
+
     if(datatype!=AMPI_DOUBLE) {
-      return MPI_Irecv(buf, count, datatype, dest, tag, comm, mpi_request);
+      return MPI_Irecv(buf, count, datatype, dest, tag, comm, &mpi_request->mpiRequest);
     }
     int i=0;    
     /* One more element. Could be a Bsend on the other side. This is only
@@ -236,12 +232,7 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
     double * tmp = (double*) malloc(sizeof(double)*(count+1));
     tmp[count]=0;
 
-    AMPI_Request primalRequest;
-    /*INT64 tmp_int64 = 0;*/
-    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
-    ht_el->key=mpi_request;
-    primalRequest.buf = buf;
-    primalRequest.mpiRequest =mpi_request;
+    mpi_request->buf = buf;
 
     if (ampi_is_tape_active()){
       ampi_tape_entry* ampi_tape = ampi_create_tape(count+1);
@@ -260,71 +251,67 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       for(i=0 ; i<count ; i=i+1) {
         ampi_get_idx(buf, &i, &ampi_tape->idx[i]);
       }
-      ampi_tape->request = (AMPI_Request*) malloc(sizeof(AMPI_Request));
-      primalRequest.va = ampi_tape;
+      ampi_tape->request = (AMPI_Request_t*) malloc(sizeof(AMPI_Request_t));
+      mpi_request->va = ampi_tape;
     }
 
-    int temp = AMPI_Irecv_f(tmp, count+1, datatype, dest, tag, comm, &primalRequest);
-
-    /*point current primalRequest index to this tape entry*/
-    ht_el->request= primalRequest;
-    HASH_ADD_PTR(AMPI_ht,key,ht_el);
+    int temp = AMPI_Irecv_f(tmp, count+1, datatype, dest, tag, comm, mpi_request_p);
 
     return temp;
 }
 
-int AMPI_Wait(MPI_Request *mpi_request, MPI_Status *status) {
+int AMPI_Wait(AMPI_Request *mpi_request_p, MPI_Status *status) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
+
+  if(AMPI_REQUEST_NULL == *mpi_request_p) {
+    return 0;
+  }
+
+  AMPI_GET_REQUEST(mpi_request, mpi_request_p);
+
+  int result = MPI_Wait(&mpi_request->mpiRequest, status);
   int i = 0;
   int ret = 0;
-  AMPI_ht_el *ht_req = NULL;
-  void *addr = mpi_request;
-  HASH_FIND_PTR(AMPI_ht, &addr, ht_req);
-  if (ht_req) {
-    AMPI_Request primalRequest;
-    /*AMPI_Request *primalRequest=(AMPI_Request*) malloc(sizeof(AMPI_Request));*/
-    primalRequest = ht_req->request;
-    double *primalValues = (double *) primalRequest.v;
+  if (NULL != mpi_request->va) {
+
+    double *primalValues = (double *) mpi_request->v;
     /*get the corresponding isend or irecv tape entry*/
 
-    ret = AMPI_Wait_f(&primalRequest, status);
     /*finally copy the primalRequest to the tape*/
     if (status == MPI_STATUS_IGNORE) {
-      primalRequest.tag = primalRequest.tag;
+      mpi_request->tag = mpi_request->tag;
     } else {
-      primalRequest.tag = status->MPI_TAG;
+      mpi_request->tag = status->MPI_TAG;
     }
 
-    if (primalRequest.oc == AMPI_IR) {
-      for (i = 0; i < primalRequest.size; i = i + 1) {
-        ampi_set_val(primalRequest.buf, &i, &primalValues[i]);
+    if (mpi_request->oc == AMPI_IR) {
+      for (i = 0; i < mpi_request->size; i = i + 1) {
+        ampi_set_val(mpi_request->buf, &i, &primalValues[i]);
       }
     }
 
     if (ampi_is_tape_active()){
       ampi_tape_entry *ampi_tape = ampi_create_tape(1);
       ampi_tape->oc = WAIT;
-      ampi_tape->tag=primalRequest.tag;
-      ampi_tape->request = primalRequest.va->request;
-      *primalRequest.va->request = primalRequest;
+      ampi_tape->tag=mpi_request->tag;
+      ampi_tape->request = mpi_request->va->request;
+      *mpi_request->va->request = *mpi_request;
       /*ampi_tape->primalRequest->a = &ampi_tape[primalRequest->va].d;*/
-      ampi_tape->request->size = primalRequest.va->arg[0];
-      ampi_tape->request->va = primalRequest.va; /* link here the information backward */
+      ampi_tape->request->size = mpi_request->va->arg[0];
+      ampi_tape->request->va = mpi_request->va; /* link here the information backward */
       ampi_create_tape_entry((void *) ampi_tape);
     }
-    HASH_DEL(AMPI_ht, ht_req);
-    free(ht_req);
     free(primalValues);
-
-    return ret;
-  } else {
-    return MPI_Wait(mpi_request, status);
   }
+
+  AMPI_DELETE_REQUEST(mpi_request, mpi_request_p);
+
+  return result;
 }
 
-int AMPI_Waitall(int count, MPI_Request *mpi_request, MPI_Status *status) {
+int AMPI_Waitall(int count, AMPI_Request *mpi_request, MPI_Status *status) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
@@ -336,55 +323,53 @@ int AMPI_Waitall(int count, MPI_Request *mpi_request, MPI_Status *status) {
         }
     } else {
         for(i=0; i<count; i=i+1) {
-            exitCode=AMPI_Wait(&mpi_request[i],status);
+            exitCode=AMPI_Wait(&mpi_request[i],MPI_STATUS_IGNORE);
         }
     }
     return exitCode;
 }
-int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status) {
+int AMPI_Waitany(int count, AMPI_Request array_of_requests[], int *index, MPI_Status *status) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
     int exitCode=AMPI_Waitany_f(count,array_of_requests,index,status);
     if(*index < count && *index >=0) {
+
+      AMPI_GET_REQUEST(mpi_request, &array_of_requests[*index]);
       int i=0;
-      AMPI_ht_el *ht_req = NULL;
-      void *addr = &array_of_requests[*index];
-      HASH_FIND_PTR(AMPI_ht, &addr, ht_req);
-      if (ht_req) {
-        AMPI_Request primalRequest;
-        /*AMPI_Request *primalRequest=(AMPI_Request*) malloc(sizeof(AMPI_Request));*/
-        primalRequest = ht_req->request;
-        double *primalValues = (double *) primalRequest.v;
+      if (NULL != mpi_request->va) {
+
+        double *primalValues = (double *) mpi_request->v;
         /*get the corresponding isend or irecv tape entry*/
         /*finally copy the primalRequest to the tape*/
         if (status == MPI_STATUS_IGNORE) {
-          primalRequest.tag = primalRequest.tag;
+          mpi_request->tag = mpi_request->tag;
         } else {
-          primalRequest.tag = status->MPI_TAG;
+          mpi_request->tag = status->MPI_TAG;
         }
 
-        if (primalRequest.oc == AMPI_IR) {
-          for (i = 0; i < primalRequest.size; i = i + 1) {
-            ampi_set_val(primalRequest.buf, &i, &primalValues[i]);
+        if (mpi_request->oc == AMPI_IR) {
+          for (i = 0; i < mpi_request->size; i = i + 1) {
+            ampi_set_val(mpi_request->buf, &i, &primalValues[i]);
           }
         }
 
         if (ampi_is_tape_active()){
           ampi_tape_entry *ampi_tape = ampi_create_tape(1);
           ampi_tape->oc = WAIT;
-          ampi_tape->tag=primalRequest.tag;
-          ampi_tape->request = primalRequest.va->request;
-          *primalRequest.va->request = primalRequest;
+          ampi_tape->tag=mpi_request->tag;
+          ampi_tape->request = mpi_request->va->request;
+          *mpi_request->va->request = *mpi_request;
           /*ampi_tape->primalRequest->a = &ampi_tape[primalRequest->va].d;*/
-          ampi_tape->request->size = primalRequest.va->arg[0];
-          ampi_tape->request->va = primalRequest.va; /* link here the information backward */
+          ampi_tape->request->size = mpi_request->va->arg[0];
+          ampi_tape->request->va = mpi_request->va; /* link here the information backward */
           ampi_create_tape_entry((void *) ampi_tape);
         }
-        HASH_DEL(AMPI_ht, ht_req);
-        free(ht_req);
+
         free(primalValues);
       }
+
+      AMPI_DELETE_REQUEST(mpi_request, &array_of_requests[*index]);
     }
     return exitCode; 
 }
@@ -854,23 +839,22 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
   return 0;
 }
 
-int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, AMPI_Request *mpi_request_p) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
+
+  AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
+
   if(datatype!=AMPI_DOUBLE) {
-    return MPI_Recv_init(buf, count, datatype, source, tag, comm, mpi_request);
+    return MPI_Recv_init(buf, count, datatype, source, tag, comm, &mpi_request->mpiRequest);
   }
-    AMPI_Request request;
-    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
-    ht_el->key=mpi_request;
-    request.buf = buf;
-    ht_el->request=request;
+    mpi_request->buf = buf;
 
     if (ampi_is_tape_active()){
       ampi_tape_entry* ampi_tape = ampi_create_tape(1);
       ampi_tape->arg=(int*) malloc(sizeof(int)*2);
-      request.va=ampi_tape;
+      mpi_request->va=ampi_tape;
 
       ampi_create_tape_entry((void*)ampi_tape);;
       ampi_tape->oc = RECV_INIT;
@@ -880,26 +864,24 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
       ampi_tape->tag = tag;
     }
 
-    HASH_ADD_PTR(AMPI_ht,key,ht_el);
     return 0;
 }
-int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *mpi_request) {
+int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *mpi_request_p) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
+
+  AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
+
   if(datatype!=AMPI_DOUBLE) {
-    return MPI_Send_init(buf, count, datatype, dest, tag, comm, mpi_request);
+    return MPI_Send_init(buf, count, datatype, dest, tag, comm, &mpi_request->mpiRequest);
   }
-    AMPI_Request request;
-    AMPI_ht_el *ht_el=(AMPI_ht_el*) malloc(sizeof(AMPI_ht_el));
-    ht_el->key=mpi_request;
-    request.buf = buf;
-    ht_el->request=request;
+    mpi_request->buf = buf;
 
     if (ampi_is_tape_active()){
       ampi_tape_entry* ampi_tape = ampi_create_tape(1);
       ampi_tape->arg=(int*) malloc(sizeof(int)*2);
-      request.va=ampi_tape;
+      mpi_request->va=ampi_tape;
 
       ampi_create_tape_entry((void*)ampi_tape);;
       ampi_tape->oc = SEND_INIT;
@@ -908,7 +890,6 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
       ampi_tape->comm = comm;
       ampi_tape->tag = tag;
     }
-    HASH_ADD_PTR(AMPI_ht,key,ht_el);
     return 0;
 }
 int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest, int sendtag, int source, int recvtag, MPI_Comm comm, MPI_Status *status) {
@@ -1019,44 +1000,35 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
     return temp;
 }
 
-int AMPI_Start(MPI_Request *mpi_request) {
+int AMPI_Start(AMPI_Request *mpi_request_p) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    AMPI_ht_el *ht_req=NULL;
-    int ret=0;
-    AMPI_Request request;
-    /*AMPI_Request *request=malloc(sizeof(AMPI_Request));*/
-    void *addr=mpi_request;
-    HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
-    if(ht_req) {
-        request=ht_req->request;
+
+    AMPI_GET_REQUEST(mpi_request, mpi_request_p);
+    int ret = 0;
+    if(NULL != mpi_request->va) {
         if (ampi_is_tape_active()){
           ampi_tape_entry* ampi_tape=0;
-          ampi_tape=request.va;
+          ampi_tape=mpi_request->va;
           if(ampi_tape->oc==SEND_INIT) {
-              ret=AMPI_Isend(request.buf,ampi_tape->arg[0],MPI_DOUBLE,ampi_tape->arg[1],ampi_tape->tag,ampi_tape->comm,mpi_request);
-              if(addr!=mpi_request) printf("changed\n");
-              HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
-              return ret;
+              ret = AMPI_Isend(mpi_request->buf,ampi_tape->arg[0],MPI_DOUBLE,ampi_tape->arg[1],ampi_tape->tag,ampi_tape->comm,mpi_request_p);
           }
           else if(ampi_tape->oc==RECV_INIT) {
-              ret=AMPI_Irecv(request.buf,ampi_tape->arg[0],MPI_DOUBLE,ampi_tape->arg[1],ampi_tape->tag,ampi_tape->comm,mpi_request);
-              if(addr!=mpi_request) printf("changed\n");
-              HASH_FIND_PTR(AMPI_ht,&addr,ht_req);
-              return ret;
+              ret = AMPI_Irecv(mpi_request->buf,ampi_tape->arg[0],MPI_DOUBLE,ampi_tape->arg[1],ampi_tape->tag,ampi_tape->comm,mpi_request_p);
           }
           else {
               printf("Active start No opcode: %d\n",ampi_tape->oc);
           }
         }
     } else {
-        return MPI_Start(mpi_request);
+        ret =  MPI_Start(&mpi_request->mpiRequest);
     }
-    return -1;
+
+    return ret;
 }
 
-int AMPI_Startall(int count, MPI_Request array_of_requests[]) {
+int AMPI_Startall(int count, AMPI_Request array_of_requests[]) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
@@ -1136,12 +1108,11 @@ void ampi_interpret_tape(void* handle){
 #ifdef NO_COMM_WORLD
       comm=ampi_tape->comm;
 #endif
-       AMPI_Isend_b(tmp_d, ampi_tape->arg[0], MPI_DOUBLE, ampi_tape->arg[1], ampi_tape->tag, comm,ampi_tape->request);
+       AMPI_Isend_b(tmp_d, ampi_tape->arg[0], MPI_DOUBLE, ampi_tape->arg[1], ampi_tape->tag, comm, &ampi_tape->request);
        for(j = 0 ; j < ampi_tape->arg[0] ; j++) {
            ampi_set_adj(&ampi_tape->idx[j], &tmp_d[j]);
          }
        free(tmp_d);
-       free(ampi_tape->request->mpiRequest);
        break;
          }
   case IRECV : {
@@ -1154,10 +1125,9 @@ void ampi_interpret_tape(void* handle){
 
        /*}*/
        /*else {*/
-           AMPI_Irecv_b(tmp_d, ampi_tape->arg[0], MPI_DOUBLE, ampi_tape->arg[1], ampi_tape->tag, comm,ampi_tape->request);
+           AMPI_Irecv_b(tmp_d, ampi_tape->arg[0], MPI_DOUBLE, ampi_tape->arg[1], ampi_tape->tag, comm, &ampi_tape->request);
            /*}*/
        free(tmp_d);
-       free(ampi_tape->request->mpiRequest);
        break;
          }
   case WAIT : {
@@ -1176,12 +1146,11 @@ void ampi_interpret_tape(void* handle){
 #endif
       }
       ampi_tape->request->a = tmp_d;
-      ampi_tape->request->mpiRequest =(MPI_Request*) malloc(sizeof(MPI_Request));
       ampi_tape->request->tag=ampi_tape->request->va->tag;
 #ifndef NO_COMM_WORLD 
       ampi_tape->request->comm=MPI_COMM_WORLD;
 #endif
-      AMPI_Wait_b(ampi_tape->request,&status);
+      AMPI_Wait_b(&ampi_tape->request,&status);
       ampi_tape->request->va->request = ampi_tape->request;
       break;
         }

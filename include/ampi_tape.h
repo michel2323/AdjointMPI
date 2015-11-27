@@ -70,24 +70,8 @@
 #include <assert.h>
 
 #include <ampi.h>
-#include <uthash.h>
 
 /*int ampi_vac=0;*/
-
-/** 
- * The UT_hash hash table is used to link the MPI_Request to an active
- * AMPI_Request when dealing with an overloading AD tool. This struct defines
- * the hash table data structure.  
- *
- * See further
- * documentation at http://troydhanson.github.io/uthash/index.html
- */
-typedef struct {
-  void *key; /**< Pointer to the MPI_Request */
-  AMPI_Request request; /**< The active AMPI_Request*/ 
-  UT_hash_handle hh; /**< Used internally by UT_hash */
-} AMPI_ht_el;
-
 
 /** 
  * An element of the AMPI tape. 
@@ -97,7 +81,7 @@ typedef struct ampi_tape_entry {
     int *arg; /**< Array of arrguments */
     INT64 *idx; /**< AD tool tape indices */
     ampi_stack* stack; /**< Stack for stored primal values */
-    AMPI_Request *request; /**< Saved pointer to an active AMPI_Request */
+    AMPI_Request_t *request; /**< Saved pointer to an active AMPI_Request */
     MPI_Comm comm; /**< MPI_Communicator */
     int tag; /**< MPI_Tag */
 } ampi_tape_entry;
@@ -151,7 +135,7 @@ int AMPI_Recv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI
  *
  * @param buf Pointer to active buffer
  */
-int AMPI_Isend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request* request);
+int AMPI_Isend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request* request);
 
 /**
  * @brief Active non blocking receive with active buffer
@@ -159,20 +143,20 @@ int AMPI_Isend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, M
  * @param buf Pointer to active buffer
  *
  */
-int AMPI_Irecv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, MPI_Request* request);
+int AMPI_Irecv(void* buf, int count, MPI_Datatype datatype, int src, int tag, MPI_Comm comm, AMPI_Request* request);
 
 /**
  * @brief Active wait. If the MPI_Request is in the hash table, the communication is active
  *
  */
-int AMPI_Wait(MPI_Request *, MPI_Status *);
+int AMPI_Wait(AMPI_Request *, MPI_Status *);
 
 /**
  * @brief Active waitall. If the MPI_Request is in the hash table, the
  * communication is active, otherwise only MPI_Wait is called.
  *
  */
-int AMPI_Waitall(int , MPI_Request *, MPI_Status *);
+int AMPI_Waitall(int , AMPI_Request *, MPI_Status *);
 
 /**
  * @brief Active waitall. If the MPI_Request is in the hash table, the
@@ -181,7 +165,7 @@ int AMPI_Waitall(int , MPI_Request *, MPI_Status *);
  * handlers correctly.
  *
  */
-int AMPI_Waitany(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status);
+int AMPI_Waitany(int count, AMPI_Request array_of_requests[], int *index, MPI_Status *status);
 
 /**
  * @brief Active broadcast. 
@@ -228,7 +212,7 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
  *
  * @param buf Pointer to active receive buffer
  */
-int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
+int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request);
 
 /**
  * @brief Active receive init. The active AMPI_Requests
@@ -236,17 +220,17 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
  *
  * @param buf Pointer to active send buffer
  */
-int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Request *request);
+int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, AMPI_Request *request);
 
 /** @brief Active start. Call AMPI_Isend or AMPI_Irecv for active request
  *
  */
-int AMPI_Start(MPI_Request *request);
+int AMPI_Start(AMPI_Request *request);
 
 /** @brief Active startall. Call AMPI_Start count times
  *
  */
-int AMPI_Startall(int count, MPI_Request array_of_requests[]);
+int AMPI_Startall(int count, AMPI_Request array_of_requests[]);
 
 /** @brief Active sendrecv with replace. 
  *

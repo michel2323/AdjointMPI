@@ -106,10 +106,13 @@ int AMPI_Brecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 }
 /* Non blocking communication */
 
-int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
 #ifdef DEBUG
     int i = 0;
 #endif
+
+    AMPI_GET_REQUEST(request, request_p);
+
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IS;
@@ -124,12 +127,13 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     }
     printf("\n");
 #endif
-    return MPI_Isend(buf, count, datatype, dest, tag, comm, request->mpiRequest);
+    return MPI_Isend(buf, count, datatype, dest, tag, comm, &request->mpiRequest);
 }
 
-int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
     int i = 0;
-    MPI_Wait(request->mpiRequest, MPI_STATUS_IGNORE);
+    AMPI_GET_REQUEST(request, request_p);
+    MPI_Wait(&request->mpiRequest, MPI_STATUS_IGNORE);
     for(i = 0 ; i < request->size ; i++) {
       buf[i] = request->a[i];
     }
@@ -143,7 +147,9 @@ int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     return MPI_SUCCESS;
 }
 
-int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
+    AMPI_GET_REQUEST(request, request_p);
+
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IR;
@@ -151,12 +157,15 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     request->size = count-1;
     /*request->tag = tag;*/
     request->comm = comm;
-    return MPI_Irecv(buf, count, datatype, dest, tag, comm, request->mpiRequest);
+    return MPI_Irecv(buf, count, datatype, dest, tag, comm, &request->mpiRequest);
 }
 
-int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
+
+    AMPI_GET_REQUEST(request, request_p);
+
     int i = 0;
-    MPI_Wait(request->mpiRequest, &request->status);
+    MPI_Wait(&request->mpiRequest, &request->status);
     for(i = 0 ; i < request->size ; i++) {
         buf[i] = request->a[i];
     }
@@ -170,22 +179,40 @@ int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     return MPI_SUCCESS;
 }
 
-int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
+int AMPI_Wait_f(AMPI_Request *request_p, MPI_Status *status) {
+
+    AMPI_GET_REQUEST(request, request_p);
     int ierr=0;
-    ierr=MPI_Wait(request->mpiRequest, status);
+    ierr=MPI_Wait(&request->mpiRequest, status);
     return ierr;
 }
 
-int AMPI_Waitany_f(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status) {
-    return MPI_Waitany(count,array_of_requests,index,status);
+int AMPI_Waitany_f(int count, AMPI_Request array_of_requests[], int *index, MPI_Status *status) {
+
+    MPI_Request* requests = (MPI_Request*)malloc(count * sizeof(MPI_Request));
+    for(int i = 0; i < count; ++i) {
+      requests[i] = array_of_requests[i]->mpiRequest;
+    }
+
+    int ret = MPI_Waitany(count,requests,index,status);
+
+    for(int i = 0; i < count; ++i) {
+      array_of_requests[i]->mpiRequest = requests[i];
+    }
+
+    free(requests);
+
+    return ret;
 }
 
-int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
+int AMPI_Wait_b(AMPI_Request *request_p, MPI_Status * status) {
 #ifdef DEBUG
     int i=0;
 #endif
+    AMPI_GET_REQUEST(request, request_p);
+
     if(request->oc == AMPI_IS) {
-	return MPI_Irecv(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->mpiRequest);
+	return MPI_Irecv(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, &request->mpiRequest);
     }
     else {
 	if(request->oc == AMPI_IR) {
@@ -196,7 +223,7 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 	    }
 	    printf("\n");
 #endif
-	    return MPI_Isend(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->mpiRequest);
+	    return MPI_Isend(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, &request->mpiRequest);
 	} else { 
 	    printf("Error: OC invalid\n");
 	}
@@ -205,18 +232,19 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 }
 
 int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
+
     int i = 0;
     int ierr;
     MPI_Request * reqs = (MPI_Request *) malloc(count * sizeof(MPI_Request*)); 
 
     for(i = 0 ; i < count ; i++) {
-	reqs[i] = *requests[i].mpiRequest;
+        reqs[i] = requests[i]->mpiRequest;
     }
 
     ierr = MPI_Waitall(count, reqs, status);
 
     for(i = 0 ; i < count ; i++) {
-	*requests[i].mpiRequest = reqs[i];
+        requests[i]->mpiRequest = reqs[i];
     }
     free(reqs);
     return ierr;
@@ -225,7 +253,7 @@ int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
 int AMPI_Waitall_b(int count, AMPI_Request *requests, MPI_Status *status) {
     int i = 0;
     for(i = 0 ; i < count ; i++) {
-	AMPI_Wait_b(&requests[i], &requests[i].status);
+        AMPI_Wait_b(&requests[i], &requests[i]->status);
     }
     return MPI_SUCCESS;
 }
