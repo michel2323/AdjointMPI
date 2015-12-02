@@ -447,14 +447,29 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
       return MPI_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
     }
     int i=0;
-    double * tmp_send = (double*) malloc(sizeof(double)*count);
-    double * tmp_recv = (double*) malloc(sizeof(double)*count);
-
-    for(i=0 ; i<count ; i=i+1) {
-        ampi_get_val(sendbuf,&i,&tmp_send[i]);
-        ampi_get_val(recvbuf,&i,&tmp_recv[i]);
+    int rank=0;
+    MPI_Comm_rank(comm,&rank);
+    double* tmp_send = NULL;
+    double* tmp_recv = NULL;
+    if(root == rank) {
+      tmp_recv = (double*) malloc(sizeof(double)*count);
     }
 
+    if(root == rank && sendbuf == MPI_IN_PLACE) {
+      tmp_send = MPI_IN_PLACE;
+    }
+    else {
+      tmp_send = (double*) malloc(sizeof(double)*count);
+    }
+
+    for(i=0 ; i<count ; i=i+1) {
+        if(sendbuf != MPI_IN_PLACE) {
+          ampi_get_val(sendbuf,&i,&tmp_send[i]);
+        }
+        if(root == rank) {
+          ampi_get_val(recvbuf,&i,&tmp_recv[i]);
+        }
+    }
 
     if (ampi_is_tape_active()){
       ampi_tape_entry* ampi_tape = ampi_create_tape(2*count+1);
@@ -462,15 +477,23 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 
       ampi_tape->arg=(int*) malloc(sizeof(int)*3);
 
-      ampi_create_dummies(recvbuf, &count);
+      if(root == rank && sendbuf == MPI_IN_PLACE) {
+        for(i=0 ; i<count ; i=i+1) {
+            ampi_get_idx(recvbuf, &i, &ampi_tape->idx[i]);
+        }
+      } else {
+        for(i=0 ; i<count ; i=i+1) {
+            ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
+        }
+      }
+
+      /*sendbuf dummies*/
+      if(rank == root) {
+        ampi_create_dummies(recvbuf, &count);
+      }
 
       ampi_create_tape_entry((void*)ampi_tape);
 
-      /*sendbuf dummies*/
-
-      for(i=0 ; i<count ; i=i+1) {
-          ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
-      }
 
       /*actual reduce entry*/
 
@@ -495,8 +518,10 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 
       /*recvbuf entry*/
 
-      for(i=0 ; i<count ; i=i+1) {
-          ampi_get_idx(recvbuf, &i, &ampi_tape->idx[count + i]);
+      if(rank == root) {
+        for(i=0 ; i<count ; i=i+1) {
+            ampi_get_idx(recvbuf, &i, &ampi_tape->idx[count + i]);
+        }
       }
 
     }else{
@@ -504,12 +529,18 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
     }
 
 
-    for(i=0 ; i<count ; i=i+1) {
-        ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+    if(rank == root) {
+      for(i=0 ; i<count ; i=i+1) {
+          ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+      }
     }
 
-    free(tmp_send);
-    free(tmp_recv);
+    if(tmp_send != MPI_IN_PLACE) {
+      free(tmp_send);
+    }
+    if(rank == root) {
+      free(tmp_recv);
+    }
     return 0;
 }
 
@@ -523,11 +554,20 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
   }
 
   int i=0;
-  double * tmp_send = (double*) malloc(sizeof(double)*count);
+  double * tmp_send = MPI_IN_PLACE;
+  if(sendbuf != MPI_IN_PLACE) {
+    tmp_send = (double*) malloc(sizeof(double)*count);
+  }
   double * tmp_recv = (double*) malloc(sizeof(double)*count);
 
-  for(i=0 ; i<count ; i=i+1) {
-    ampi_get_val(sendbuf,&i,&tmp_send[i]);
+  if(sendbuf == MPI_IN_PLACE) {
+    for(i=0 ; i<count ; i=i+1) {
+      ampi_get_val(recvbuf,&i,&tmp_recv[i]);
+    }
+  } else {
+    for(i=0 ; i<count ; i=i+1) {
+      ampi_get_val(sendbuf,&i,&tmp_send[i]);
+    }
   }
 
   if(ampi_is_tape_active()) {
@@ -536,15 +576,20 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     ampi_tape->arg=(int*) malloc(sizeof(int)*3);
 
+    if(sendbuf == MPI_IN_PLACE) {
+      for(i=0 ; i<count ; i=i+1) {
+        ampi_get_idx(recvbuf, &i, &ampi_tape->idx[i]);
+      }
+    } else {
+      for(i=0 ; i<count ; i=i+1) {
+        ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
+      }
+    }
+
+    /*sendbuf dummies*/
     ampi_create_dummies(recvbuf, &count);
     ampi_create_tape_entry((void*)ampi_tape);;
     /*actual reduce entry*/
-
-    /*sendbuf dummies*/
-
-     for(i=0 ; i<count ; i=i+1) {
-       ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
-     }
 
     ampi_tape->oc = ALLREDUCE;
     ampi_tape->arg[0] = count;
@@ -579,7 +624,9 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
   }
 
 
-  free(tmp_send);
+  if(sendbuf != MPI_IN_PLACE) {
+    free(tmp_send);
+  }
   free(tmp_recv);
   return ierr;
 }
