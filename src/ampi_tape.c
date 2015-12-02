@@ -593,25 +593,38 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
   }
   int i=0;
   int size=0;
+  int rank=0;
   MPI_Comm_size(comm,&size);
-  double * tmp_send = (double*) malloc(sizeof(double)*sendcnt*size);
+  MPI_Comm_rank(comm,&rank);
+  double * tmp_send = NULL;
   double * tmp_recv = (double*) malloc(sizeof(double)*recvcnt);
 
-  for(i=0 ; i<sendcnt*size ; i=i+1) {
-    ampi_get_val(sendbuf,&i,&tmp_send[i]);
+  int sendSize=0;
+  int bufferSize = recvcnt+1;
+  if(rank == root) {
+    sendSize=sendcnt*size;
+    bufferSize = sendSize+recvcnt+1;
+
+    tmp_send = (double*) malloc(sizeof(double)*sendSize);
+
+    for(i=0 ; i<sendSize ; i=i+1) {
+      ampi_get_val(sendbuf,&i,&tmp_send[i]);
+    }
   }
 
   if (ampi_is_tape_active()){
 
-    ampi_tape_entry* ampi_tape = ampi_create_tape(recvcnt+sendcnt*size+1);
+    ampi_tape_entry* ampi_tape = ampi_create_tape(bufferSize);
     ampi_tape->arg=(int*) malloc(sizeof(int)*3);
     ampi_tape->comm = comm;
     ampi_create_dummies(recvbuf, &recvcnt);
 
     /*sendbuf dummies*/
 
-    for(i=0 ; i<sendcnt*size ; i=i+1) {
-      ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
+    if(rank == root) {
+      for(i=0 ; i<sendSize ; i=i+1) {
+        ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
+      }
     }
 
     ampi_tape->oc = SCATTER;
@@ -623,7 +636,7 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
     /*recvbuf entry*/
 
     for(i=0 ; i<recvcnt ; i=i+1) {
-      ampi_get_idx(recvbuf, &i, &ampi_tape->idx[sendcnt*size+i]);
+      ampi_get_idx(recvbuf, &i, &ampi_tape->idx[sendSize+i]);
     }
   }
 
@@ -633,7 +646,9 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
     ampi_set_val(recvbuf, &i, &tmp_recv[i]);
   }
 
-  free(tmp_send);
+  if(rank == root) {
+    free(tmp_send);
+  }
   free(tmp_recv);
   return 0;
 
@@ -646,62 +661,83 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
   if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
     return MPI_Scatterv(sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm);
   }
-    int i=0;
-    int size=0;
-    int rank=0;
-    int max_size=0;
-    MPI_Comm_size(comm,&size);
-    MPI_Comm_size(comm,&rank);
-    /* Allocate maximum size of sendbuf */
+  int i=0;
+  int j=0;
+  int size=0;
+  int rank=0;
+  MPI_Comm_size(comm,&size);
+  MPI_Comm_rank(comm,&rank);
+  double * tmp_send = NULL;
+  int *    tmp_disp = NULL;
+  double * tmp_recv = (double*) malloc(sizeof(double)*recvcnt);
+
+  int sendSize=0;
+  int bufferSize = recvcnt+1;
+  if(rank == root) {
+    tmp_disp = (int*) malloc(sizeof(int) * size);
     for(i=0;i<size;i=i+1) {
-      if (sendcnts[i] + displs[i] > max_size) {
-        max_size = sendcnts[i] + displs[i];
+      tmp_disp[i] = sendSize;
+
+      sendSize = sendSize + sendcnts[i];
+    }
+    bufferSize = sendSize+recvcnt+1;
+
+    tmp_send = (double*) malloc(sizeof(double)*sendSize);
+
+    int idxPos = 0;
+    for(i=0 ; i<size ; i=i+1) {
+      for(j=0 ; j<sendcnts[i]; j=j+1) {
+        int pos = displs[i] + j;
+        ampi_get_val(sendbuf,&pos,&tmp_send[idxPos]);
+        idxPos=idxPos+1;
       }
     }
-    double * tmp_send = (double*) malloc(sizeof(double)*max_size);
-    double * tmp_recv = (double*) malloc(sizeof(double)*recvcnt);
+  }
 
+  if (ampi_is_tape_active()){
 
-    for(i=0 ; i<max_size ; i=i+1) {
-      ampi_get_val(sendbuf,&i,&tmp_send[i]);
-    }
+    ampi_tape_entry* ampi_tape = ampi_create_tape(bufferSize);
+    ampi_tape->arg=(int*) malloc(sizeof(int)*3 + 2*size);
+    ampi_tape->comm = comm;
+    ampi_create_dummies(recvbuf, &recvcnt);
 
-    if (ampi_is_tape_active()){
-      ampi_tape_entry* ampi_tape = ampi_create_tape(max_size + recvcnt + 1);
-      ampi_tape->arg=(int*) malloc(sizeof(int)*(3+2*size));
-      ampi_tape->comm = comm;
+    /*sendbuf dummies*/
 
-      /*sendbuf dummies*/
-
-      for(i=0 ; i<max_size ; i=i+1) {
-        ampi_get_val(sendbuf,&i,&tmp_send[i]);
-      }
-
-      for(i=0 ; i<size*2 ; i=i+2) {
-        ampi_tape->arg[i+3] = sendcnts[i/2];
-        ampi_tape->arg[i+4] = displs[i/2];
-      }
-      ampi_tape->oc = SCATTERV;
-      ampi_tape->arg[2] = max_size;
-      ampi_tape->arg[1] = recvcnt;
-      ampi_tape->arg[0] = root;
-      ampi_tape->comm = comm;
-
-      /*recvbuf entry*/
-
-      for(i=0 ; i<recvcnt ; i=i+1) {
-          ampi_get_idx(recvbuf, &i, &ampi_tape->idx[max_size + i]);
+    if(rank == root) {
+      for(i=0 ; i<sendSize ; i=i+1) {
+        ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
       }
     }
 
-    /*AMPI_Scatterv_f(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);*/
+    ampi_tape->oc = SCATTERV;
+    for(i=0 ; i<size; i=i+1) {
+      ampi_tape->arg[3 + i] = sendcnts[i];
+      ampi_tape->arg[3 + size + i] = tmp_disp[i];
+    }
+    ampi_tape->arg[2] = sendSize;
+    ampi_tape->arg[1] = recvcnt;
+    ampi_tape->arg[0] = root;
+    ampi_tape->comm = comm;
+    ampi_create_tape_entry((void*)ampi_tape);;
+    /*recvbuf entry*/
 
     for(i=0 ; i<recvcnt ; i=i+1) {
-        ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+      ampi_get_idx(recvbuf, &i, &ampi_tape->idx[sendSize+i]);
     }
+  }
+
+  MPI_Scatterv(tmp_send, sendcnts, tmp_disp, sendtype, tmp_recv, recvcnt, recvtype, root, comm);
+
+  for(i=0 ; i<recvcnt ; i=i+1) {
+    ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+  }
+
+  if(rank == root) {
+    free(tmp_disp);
     free(tmp_send);
-    free(tmp_recv);
-    return 0;
+  }
+  free(tmp_recv);
+  return 0;
 
 }
 
@@ -871,6 +907,7 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
       for( j=0; j < recvcnts[i]; j=j+1) {
         int pos = displs[i] + j;
         ampi_set_val(recvbuf, &pos, &tmp_recv[idxPos]);
+        idxPos=idxPos+1;
       }
     }
   }
@@ -1450,26 +1487,73 @@ void ampi_interpret_tape(void* handle){
        comm=ampi_tape->comm;
 #endif
        int size=0;
+       int rank=0;
        int root=ampi_tape->arg[0];
        int crecv=ampi_tape->arg[1];
        int csend=ampi_tape->arg[2];
        MPI_Comm_size(comm,&size);
-       double *sendbuf=(double*) malloc(sizeof(double)*csend*size);
+       MPI_Comm_rank(comm,&rank);
+       double *sendbuf=NULL;
+       int sendSize=0;
+       if(rank == root) {
+         sendSize = csend*size;
+         sendbuf = (double*) malloc(sizeof(double)*sendSize);
+       }
        double *recvbuf=(double*) malloc(sizeof(double)*crecv);
+
        for(j=0;j<crecv;j++) {
-         ampi_get_adj(&ampi_tape->idx[csend*size+j],&recvbuf[j]);
+         ampi_get_adj(&ampi_tape->idx[sendSize+j],&recvbuf[j]);
        }
        AMPI_Scatter_b(sendbuf,csend,MPI_DOUBLE,recvbuf,crecv,MPI_DOUBLE,root,comm);
-       for(j=0;j<csend*size;j++) {
-         ampi_set_adj(&ampi_tape->idx[j],&sendbuf[j]);
+
+       if(rank == root) {
+         for(j=0;j<sendSize;j++) {
+           ampi_set_adj(&ampi_tape->idx[j],&sendbuf[j]);
+         }
        }
-       free(sendbuf);
+       if(rank == root) {
+         free(sendbuf);
+       }
        free(recvbuf);
        break;
            }
   case SCATTERV : {
-         break;
-           }
+#ifdef NO_COMM_WORLD
+       comm=ampi_tape->comm;
+#endif
+       int size=0;
+       int rank=0;
+       MPI_Comm_size(comm,&size);
+       MPI_Comm_rank(comm,&rank);
+       int root=ampi_tape->arg[0];
+       int crecv=ampi_tape->arg[1];
+       int ctotal=ampi_tape->arg[2];
+       int* csends=&ampi_tape->arg[3];
+       int* cdispl=&ampi_tape->arg[3 + size];
+       double *sendbuf=NULL;
+       int sendSize=0;
+       if(rank == root) {
+         sendSize = ctotal;
+         sendbuf = (double*) malloc(sizeof(double)*ctotal);
+       }
+       double *recvbuf=(double*) malloc(sizeof(double)*crecv);
+
+       for(j=0;j<crecv;j++) {
+         ampi_get_adj(&ampi_tape->idx[sendSize+j],&recvbuf[j]);
+       }
+       MPI_Gatherv(recvbuf, crecv,MPI_DOUBLE, sendbuf, csends, cdispl,MPI_DOUBLE,root,comm);
+
+       if(rank == root) {
+         for(j=0;j<sendSize;j++) {
+           ampi_set_adj(&ampi_tape->idx[j],&sendbuf[j]);
+         }
+       }
+       if(rank == root) {
+         free(sendbuf);
+       }
+       free(recvbuf);
+       break;
+    }
   case GATHER: {
 #ifdef NO_COMM_WORLD
        comm=ampi_tape->comm;
