@@ -37,7 +37,7 @@ extern void ampi_create_tape_entry(void* handle);
 
 /** Create size tape entries to store the values of buf. Refer to receive buffer without
  * initialization */
-extern void ampi_create_dummies(void* buf, int *size);
+extern void ampi_create_dummies_displ(void* buf, int* displ, int *size);
 
 /* Returns 1 if the tape is active, otherwise 0. */
 extern int ampi_is_tape_active();

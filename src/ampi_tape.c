@@ -29,6 +29,11 @@ int AMPI_Finalize() {
 
 }
 
+void ampi_create_dummies(void *buf, int *size) {
+    int displ = 0;
+    ampi_create_dummies_displ(buf, &displ, size);
+}
+
 int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm) {
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
@@ -722,7 +727,7 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
   int recvSize=recvcnt*size;
   int bufferSize = sendcnt+1;
   if(rank == root) {
-          bufferSize = recvcnt*size+sendcnt+1;
+    bufferSize = recvcnt*size+sendcnt+1;
   }
 
   for(i=0 ; i<sendcnt ; i=i+1) {
@@ -789,25 +794,43 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
   int size=0;
   int rank=0;
   int max_size=0;
+  int total_size=0;
+  int bufferSize=0;
   MPI_Comm_size(comm,&size);
   MPI_Comm_size(comm,&rank);
+
   /* Determine and allocate maximum size of recvbuf */
-  for(i=0;i<size;i=i+1) {
-    if (recvcnts[i] + displs[i] > max_size) {
-      max_size = recvcnts[i] + displs[i];
-    }
-  }
+
+  bufferSize = sendcnt + 1;
   double * tmp_send = (double*) malloc(sizeof(double)*sendcnt);
-  double * tmp_recv = (double*) malloc(sizeof(double)*max_size);
+  int *    tmp_disp = (int*) malloc(sizeof(int) * size);
+  double * tmp_recv = NULL;
 
   for(i=0 ; i<sendcnt ; i=i+1) {
     ampi_get_val(sendbuf,&i,&tmp_send[i]);
   }
 
+  if(rank == root) {
+    for(i=0;i<size;i=i+1) {
+      tmp_disp[i] = total_size;
+
+      total_size = total_size + recvcnts[i];
+    }
+
+    bufferSize = bufferSize + total_size;
+    tmp_recv = (double*) malloc(sizeof(double)*total_size);
+  }
+
   if (ampi_is_tape_active()){
-    ampi_tape_entry* ampi_tape = ampi_create_tape(max_size*size+sendcnt+1);
-    ampi_tape->arg=(int*) malloc(sizeof(int)*3);
+    ampi_tape_entry* ampi_tape = ampi_create_tape(bufferSize);
+    ampi_tape->arg=(int*) malloc(sizeof(int)*(3 + 2*size));
     ampi_tape->comm = comm;
+
+    if(rank == root) {
+      for( i=0; i < size; i=i+1 ) {
+        ampi_create_dummies_displ(recvbuf, &displs[i], &recvcnts[i]);
+      }
+    }
 
     /*sendbuf dummies*/
 
@@ -815,26 +838,45 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
       ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
     }
     ampi_tape->oc = GATHERV;
-    ampi_tape->arg[2] = sendcnt;
-    ampi_tape->arg[1] = max_size;
+    for(i=0 ; i<size; i=i+1) {
+      ampi_tape->arg[3 + i] = recvcnts[i];
+      ampi_tape->arg[3 + size + i] = tmp_disp[i];
+    }
+    ampi_tape->arg[2] = total_size;
+    ampi_tape->arg[1] = sendcnt;
     ampi_tape->arg[0] = root;
     ampi_tape->comm = comm;
 
 
     /*recvbuf entry*/
 
-    for(i=0 ; i<max_size ; i=i+1) {
-        ampi_get_idx(recvbuf, &i, &ampi_tape->idx[sendcnt+i]);
+    if(rank == root) {
+      int j;
+      int idxPos = sendcnt;
+      for( i=0; i < size; i=i+1 ) {
+        for( j=0; j < recvcnts[i]; j=j+1) {
+          int pos = displs[i] + j;
+          ampi_get_idx(recvbuf, &pos, &ampi_tape->idx[idxPos]);
+          idxPos=idxPos+1;
+        }
+      }
     }
   }
 
-  /* TODO: implement primal evaluation */
-  /*AMPI_Gather(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);*/
+  MPI_Gatherv(tmp_send, sendcnt, sendtype, tmp_recv, recvcnts, tmp_disp, recvtype, root, comm);
 
-  for(i=0 ; i<max_size ; i=i+1) {
-      ampi_set_val(recvbuf, &i, &tmp_recv[i]);
+  if(rank == root) {
+    int j;
+    int idxPos = 0;
+    for( i=0; i < size; i=i+1 ) {
+      for( j=0; j < recvcnts[i]; j=j+1) {
+        int pos = displs[i] + j;
+        ampi_set_val(recvbuf, &pos, &tmp_recv[idxPos]);
+      }
+    }
   }
   free(tmp_send);
+  free(tmp_disp);
   free(tmp_recv);
   return 0;
 }
@@ -1305,6 +1347,35 @@ void ampi_interpret_tape(void* handle){
          break;
            }
   case GATHERV : {
+#ifdef NO_COMM_WORLD
+       comm=ampi_tape->comm;
+#endif
+       int size=0;
+       int rank=0;
+       MPI_Comm_size(comm,&size);
+       MPI_Comm_rank(comm,&rank);
+       int root=ampi_tape->arg[0];
+       int csend=ampi_tape->arg[1];
+       int  ctotal=ampi_tape->arg[2];
+       int* crecvs=&ampi_tape->arg[3];
+       int* cdispl=&ampi_tape->arg[3 + size];
+       double *sendbuf=(double*)malloc(sizeof(double)*csend);
+       double *recvbuf=NULL;
+       if(rank == root) {
+         recvbuf = (double*)malloc(sizeof(double)*ctotal);
+         for(j=0;j<ctotal;j++) {
+           ampi_get_adj(&ampi_tape->idx[csend + j],&recvbuf[j]);
+         }
+       }
+
+       MPI_Scatterv(recvbuf, crecvs, cdispl, MPI_DOUBLE, sendbuf, csend, MPI_DOUBLE, root, comm);
+       for(j=0;j<csend;j++) {
+         ampi_set_adj(&ampi_tape->idx[j],&sendbuf[j]);
+       }
+       free(sendbuf);
+       if(rank == root) {
+         free(recvbuf);
+       }
          break;
            }
   case SENDRECVREPLACE : {
