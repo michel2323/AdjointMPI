@@ -188,15 +188,17 @@ int AMPI_Wait_f(AMPI_Request *request_p, MPI_Status *status) {
 }
 
 int AMPI_Waitany_f(int count, AMPI_Request array_of_requests[], int *index, MPI_Status *status) {
+    
+    int i;
 
     MPI_Request* requests = (MPI_Request*)malloc(count * sizeof(MPI_Request));
-    for(int i = 0; i < count; ++i) {
+    for(i = 0; i < count; ++i) {
       requests[i] = array_of_requests[i]->mpiRequest;
     }
 
     int ret = MPI_Waitany(count,requests,index,status);
 
-    for(int i = 0; i < count; ++i) {
+    for(i = 0; i < count; ++i) {
       array_of_requests[i]->mpiRequest = requests[i];
     }
 
