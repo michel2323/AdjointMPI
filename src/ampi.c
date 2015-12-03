@@ -308,15 +308,20 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
     AMPI_Tupel *recvtupel = 0;
     int i = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    double* readbuf = sendbuf;
+    if(sendbuf == MPI_IN_PLACE) {
+      readbuf = recvbuf;
+    }
     if (op == MPI_PROD) {
         *ampi_reduce_stack = AMPI_stack_create(2 * count);
         recvbuf_tmp = (double *) malloc(sizeof(double) * count);
         for (i = 0; i < count; i = i + 1) {
-            AMPI_push(*ampi_reduce_stack, sendbuf[i]);
+            AMPI_push(*ampi_reduce_stack, readbuf[i]);
         }
-        MPI_Allreduce(sendbuf, recvbuf_tmp, count, datatype, op, comm);
-        for (i = 0; i < count; i = i + 1)
+        MPI_Allreduce(readbuf, recvbuf_tmp, count, datatype, op, comm);
+        for (i = 0; i < count; i = i + 1) {
             AMPI_push(*ampi_reduce_stack, recvbuf_tmp[i]);
+        }
         if (myid == root) {
             for (i = 0; i < count; i = i + 1) {
                 recvbuf[i] = recvbuf_tmp[i];
@@ -327,7 +332,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
     }
     if (op == MPI_SUM) {
         recvbuf_tmp = (double *) malloc(sizeof(double) * count);
-        MPI_Reduce(sendbuf, recvbuf_tmp, count, datatype, op, root, comm);
+        MPI_Reduce(readbuf, recvbuf_tmp, count, datatype, op, root, comm);
         if (myid == root) {
             for (i = 0; i < count; i = i + 1) {
                 recvbuf[i] = recvbuf_tmp[i];
@@ -341,7 +346,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
         sendtupel = (AMPI_Tupel *) malloc(sizeof(AMPI_Tupel) * count);
         recvtupel = (AMPI_Tupel *) malloc(sizeof(AMPI_Tupel) * count);
         for (i = 0; i < count; i = i + 1) {
-            sendtupel[i].v = sendbuf[i];
+            sendtupel[i].v = readbuf[i];
             sendtupel[i].j = myid;
         }
         if (op == MPI_MAX)
@@ -434,46 +439,52 @@ int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 }
 
 int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack** ampi_reduce_stack) {
-    int i=0;
-    int myid=0;
-    AMPI_Tupel *sendtupel=0;
-    AMPI_Tupel *recvtupel=0;
-    if(op == MPI_PROD || op == MPI_SUM) {
-        *ampi_reduce_stack = AMPI_stack_create(count * 2);
-	for(i=0; i<count ; i=i+1) {
-	    AMPI_push(*ampi_reduce_stack,sendbuf[i]);
-	}
-
-	MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
-	for(i=0; i<count; i=i+1)
-	    AMPI_push(*ampi_reduce_stack,recvbuf[i]);
-	return MPI_SUCCESS;
+  int i=0;
+  int myid=0;
+  AMPI_Tupel *sendtupel=0;
+  AMPI_Tupel *recvtupel=0;
+  double* readbuf = sendbuf;
+  if(sendbuf == MPI_IN_PLACE) {
+    readbuf = recvbuf;
+  }
+  if(op == MPI_PROD || op == MPI_SUM) {
+    *ampi_reduce_stack = AMPI_stack_create(count * 2);
+    for(i=0; i<count ; i=i+1) {
+      AMPI_push(*ampi_reduce_stack,readbuf[i]);
     }
-    if(op == MPI_MIN || op == MPI_MAX) {
-	sendtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
-	recvtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	for(i=0; i<count; i=i+1) {
-	    sendtupel[i].v=sendbuf[i];
-	    sendtupel[i].j=myid;
-	}
-	if(op == MPI_MAX)
-	    MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MAXLOC, comm);
-	else
-	    MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MINLOC, comm);
+
+    MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+    for(i=0; i<count; i=i+1) {
+      AMPI_push(*ampi_reduce_stack,recvbuf[i]);
+    }
+    return MPI_SUCCESS;
+  }
+  if(op == MPI_MIN || op == MPI_MAX) {
+    sendtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
+    recvtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    for(i=0; i<count; i=i+1) {
+      sendtupel[i].v=readbuf[i];
+      sendtupel[i].j=myid;
+    }
+    if(op == MPI_MAX) {
+      MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MAXLOC, comm);
+    } else {
+      MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MINLOC, comm);
+    }
 
     *ampi_reduce_stack = AMPI_stack_create(count);
-	for(i=0; i<count; i=i+1) {
-	    AMPI_push(*ampi_reduce_stack,(double) recvtupel[i].j);
-	}
-	for(i=0; i<count; i=i+1) {
-	    recvbuf[i]=recvtupel[i].v;
-	}
-	free(sendtupel);
-	free(recvtupel);
-	return MPI_SUCCESS;
+    for(i=0; i<count; i=i+1) {
+      AMPI_push(*ampi_reduce_stack,(double) recvtupel[i].j);
     }
-    return -1;
+    for(i=0; i<count; i=i+1) {
+      recvbuf[i]=recvtupel[i].v;
+    }
+    free(sendtupel);
+    free(recvtupel);
+    return MPI_SUCCESS;
+  }
+  return -1;
 }
 
 int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack* ampi_reduce_stack) {
