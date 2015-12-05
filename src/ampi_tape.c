@@ -1461,6 +1461,9 @@ void ampi_interpret_tape(void* handle){
        break;
          }
   case REDUCE : {
+        int rank=0;
+        int root=ampi_tape->arg[1];
+        MPI_Comm_rank(comm,&rank);
         if(ampi_tape->arg[2] == AMPI_REDUCE_ADD)
             op = MPI_SUM;
         if(ampi_tape->arg[2] == AMPI_REDUCE_MUL)
@@ -1470,10 +1473,13 @@ void ampi_interpret_tape(void* handle){
         if(ampi_tape->arg[2] == AMPI_REDUCE_MAX)
             op = MPI_MAX;
         tmp_d_send = (double*) malloc(sizeof(double)*ampi_tape->arg[0]);
-        tmp_d_recv = (double*) malloc(sizeof(double)*ampi_tape->arg[0]);
-        for(j=0;j<ampi_tape->arg[0];j=j+1) {
-          ampi_get_adj(&ampi_tape->idx[ampi_tape->arg[0] + j], &tmp_d_recv[j]);
+        tmp_d_recv = (double*) malloc(sizeof(double)*ampi_tape->arg[0]); /* needs to be allocated for reverse function */
+        if(root == rank) {
+          for(j=0;j<ampi_tape->arg[0];j=j+1) {
+            ampi_get_adj(&ampi_tape->idx[ampi_tape->arg[0] + j], &tmp_d_recv[j]);
+          }
         }
+
         for(j=0;j<ampi_tape->arg[0];j=j+1) {
           tmp_d_send[j]=0;
         }

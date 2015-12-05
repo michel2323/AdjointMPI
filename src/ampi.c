@@ -370,72 +370,72 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 }
 
 int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, ampi_stack* ampi_reduce_stack) {
-    int i=0;
-    double *s = 0;
-    double *s_d = 0;
-    double *r = 0;
-    int idx=0;
-    int myid=0;
-    if(op == MPI_PROD) {
-        AMPI_stack_reset(ampi_reduce_stack);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	    s =(double*) malloc(sizeof(double)*count);
-	    s_d =(double*) malloc(sizeof(double)*count);
-	    r =(double*) malloc(sizeof(double)*count);
-	    MPI_Bcast(recvbuf, count, datatype, root, comm);
-	    for(i=count-1 ; i>=0 ; i=i-1) {
-		r[i] = AMPI_pop(ampi_reduce_stack);
-	    }
-	    for(i=count-1 ; i>=0 ; i=i-1) {
-		s[i] = AMPI_pop(ampi_reduce_stack);
-	    }
-	    for(i=0; i<count; i=i+1) {
-		s_d[i] = recvbuf[i];
-	    }
-	    for(i=0 ; i<count ; i=i+1) {
-		if(r[i]*s_d[i] == 0.0){
-		    sendbuf[i]=0;
-		    printf("--------------------------------------\n");
-		    printf("Arithmetic Exeption in adjoint reduce!\n");
-		    printf("Result set to 0. Hoping for the best.\n");
-		    printf("--------------------------------------\n");
-		    return 1;
-		}
-		else {
-		    sendbuf[i] = (r[i]/s[i])*s_d[i];
-		}
-	    }
-	    free(s);
-	    free(s_d);
-	    free(r);
-	    return MPI_SUCCESS;
+  int i=0;
+  double *s = 0;
+  double *s_d = 0;
+  double *r = 0;
+  int idx=0;
+  int myid=0;
+  if(op == MPI_PROD) {
+    AMPI_stack_reset(ampi_reduce_stack);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    s =(double*) malloc(sizeof(double)*count);
+    s_d =(double*) malloc(sizeof(double)*count);
+    r =(double*) malloc(sizeof(double)*count);
+    MPI_Bcast(recvbuf, count, datatype, root, comm);
+    for(i=count-1 ; i>=0 ; i=i-1) {
+      r[i] = AMPI_pop(ampi_reduce_stack);
     }
-    if(op == MPI_SUM) {
-	s_d = (double*)malloc(sizeof(double)*count);
-	MPI_Bcast(recvbuf, count, datatype, root, comm);
-	for(i=0; i<count; i=i+1)
-	    s_d[i] = recvbuf[i];
-	for(i=0 ; i<count ; i=i+1) {
-	    sendbuf[i] = s_d[i];
-	}
-	free(s_d);
-	return MPI_SUCCESS;
+    for(i=count-1 ; i>=0 ; i=i-1) {
+      s[i] = AMPI_pop(ampi_reduce_stack);
     }
-    if(op == MPI_MIN || op == MPI_MAX) {
-        AMPI_stack_reset(ampi_reduce_stack);
-	MPI_Bcast(recvbuf, count, datatype, root, comm);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	for(i=count-1;i>=0;i--) {
-	    idx=(int)AMPI_pop(ampi_reduce_stack);
-	    if(myid!=idx)
-		sendbuf[i]=0;
-	    else {
-		sendbuf[i]=recvbuf[i];
-	    }
-	}
-	return MPI_SUCCESS;
+    for(i=0; i<count; i=i+1) {
+      s_d[i] = recvbuf[i];
     }
-    return -1;
+    for(i=0 ; i<count ; i=i+1) {
+      if(r[i]*s_d[i] == 0.0){
+        sendbuf[i]=0;
+        printf("--------------------------------------\n");
+        printf("Arithmetic Exeption in adjoint reduce!\n");
+        printf("Result set to 0. Hoping for the best.\n");
+        printf("--------------------------------------\n");
+        return 1;
+      }
+      else {
+        sendbuf[i] = (r[i]/s[i])*s_d[i];
+      }
+    }
+    free(s);
+    free(s_d);
+    free(r);
+    return MPI_SUCCESS;
+  }
+  if(op == MPI_SUM) {
+    s_d = (double*)malloc(sizeof(double)*count);
+    MPI_Bcast(recvbuf, count, datatype, root, comm);
+    for(i=0; i<count; i=i+1)
+      s_d[i] = recvbuf[i];
+    for(i=0 ; i<count ; i=i+1) {
+      sendbuf[i] = s_d[i];
+    }
+    free(s_d);
+    return MPI_SUCCESS;
+  }
+  if(op == MPI_MIN || op == MPI_MAX) {
+    AMPI_stack_reset(ampi_reduce_stack);
+    MPI_Bcast(recvbuf, count, datatype, root, comm);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    for(i=count-1;i>=0;i--) {
+      idx=(int)AMPI_pop(ampi_reduce_stack);
+      if(myid!=idx)
+        sendbuf[i]=0;
+      else {
+        sendbuf[i]=recvbuf[i];
+      }
+    }
+    return MPI_SUCCESS;
+  }
+  return -1;
 }
 
 int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack** ampi_reduce_stack) {
