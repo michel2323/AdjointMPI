@@ -50,8 +50,8 @@ struct ampi_tape_entry;
 /**
  * AMPI request, replacing the MPI request 
  */
-typedef struct AMPI_Request {
-    MPI_Request *mpiRequest; /**< Original request */
+typedef struct AMPI_Request_t {
+    MPI_Request mpiRequest; /**< Original request */
     MPI_Status status; /**< Original status */
     MPI_Comm comm; /**< Original communicator */
 
@@ -65,8 +65,20 @@ typedef struct AMPI_Request {
     int oc;               /**< Operation code */
     int dest;             /**< Destination or source. */
     int size;             /**< Size of the buffer. */
-} AMPI_Request;
+} AMPI_Request_t;
 
+typedef AMPI_Request_t* AMPI_Request;
+#define AMPI_REQUEST_NULL NULL
+
+#define AMPI_GET_REQUEST(request, request_t) AMPI_Request_t* request = *(request_t)
+
+#define AMPI_CREATE_REQUEST(request, request_p) \
+  AMPI_Request_t* request = (AMPI_Request_t*)calloc(1, sizeof(AMPI_Request_t)); \
+  *(request_p) = request;
+
+#define AMPI_DELETE_REQUEST(request, request_p) \
+  free(request); \
+  *(request_p) = AMPI_REQUEST_NULL;
 
 /**
  * Tupel used in the MPI_MAX and MPI_MIN reduction to save the rank of
@@ -365,7 +377,7 @@ int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status);
  *
  * @return error code 
  */
-int AMPI_Waitany_f(int count, MPI_Request array_of_request[], int *index, MPI_Status *status);
+int AMPI_Waitany_f(int count, AMPI_Request array_of_request[], int *index, MPI_Status *status);
 
 /**
  * Active reverse waitall. This marks a performance loss in the active

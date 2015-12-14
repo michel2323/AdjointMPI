@@ -10,8 +10,6 @@ libAMPI_adir = $(includedir)
 libAMPI_a_HEADERS=\
                   include/ampi.h include/ampi_stack.h \
 		   \
-		  include/ampi_tape.h include/uthash.h \
-		   \
 		  include/ampi_interface.h include/ampi_tape.hpp 
 
 libAMPI_a_SOURCES = \
@@ -19,8 +17,6 @@ libAMPI_a_SOURCES = \
                     src/ampi.c src/ampi_stack.c \
 		    src/ampi_tape.c \
                     include/ampi.h include/ampi_stack.h \
-		    \
-		    include/ampi_tape.h include/uthash.h \
 		    \
 		    include/ampi_interface.h include/ampi_tape.hpp 
 

@@ -106,10 +106,13 @@ int AMPI_Brecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
 }
 /* Non blocking communication */
 
-int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
 #ifdef DEBUG
     int i = 0;
 #endif
+
+    AMPI_GET_REQUEST(request, request_p);
+
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IS;
@@ -124,12 +127,13 @@ int AMPI_Isend_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     }
     printf("\n");
 #endif
-    return MPI_Isend(buf, count, datatype, dest, tag, comm, request->mpiRequest);
+    return MPI_Isend(buf, count, datatype, dest, tag, comm, &request->mpiRequest);
 }
 
-int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
     int i = 0;
-    MPI_Wait(request->mpiRequest, MPI_STATUS_IGNORE);
+    AMPI_GET_REQUEST(request, request_p);
+    MPI_Wait(&request->mpiRequest, MPI_STATUS_IGNORE);
     for(i = 0 ; i < request->size ; i++) {
       buf[i] = request->a[i];
     }
@@ -143,7 +147,9 @@ int AMPI_Isend_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     return MPI_SUCCESS;
 }
 
-int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
+    AMPI_GET_REQUEST(request, request_p);
+
     request->v = buf;
     request->dest= dest;
     request->oc = AMPI_IR;
@@ -151,12 +157,15 @@ int AMPI_Irecv_f(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     request->size = count-1;
     /*request->tag = tag;*/
     request->comm = comm;
-    return MPI_Irecv(buf, count, datatype, dest, tag, comm, request->mpiRequest);
+    return MPI_Irecv(buf, count, datatype, dest, tag, comm, &request->mpiRequest);
 }
 
-int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request) {
+int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, AMPI_Request *request_p) {
+
+    AMPI_GET_REQUEST(request, request_p);
+
     int i = 0;
-    MPI_Wait(request->mpiRequest, &request->status);
+    MPI_Wait(&request->mpiRequest, &request->status);
     for(i = 0 ; i < request->size ; i++) {
         buf[i] = request->a[i];
     }
@@ -170,22 +179,42 @@ int AMPI_Irecv_b(double *buf, int count, MPI_Datatype datatype, int dest, int ta
     return MPI_SUCCESS;
 }
 
-int AMPI_Wait_f(AMPI_Request *request, MPI_Status *status) {
+int AMPI_Wait_f(AMPI_Request *request_p, MPI_Status *status) {
+
+    AMPI_GET_REQUEST(request, request_p);
     int ierr=0;
-    ierr=MPI_Wait(request->mpiRequest, status);
+    ierr=MPI_Wait(&request->mpiRequest, status);
     return ierr;
 }
 
-int AMPI_Waitany_f(int count, MPI_Request array_of_requests[], int *index, MPI_Status *status) {
-    return MPI_Waitany(count,array_of_requests,index,status);
+int AMPI_Waitany_f(int count, AMPI_Request array_of_requests[], int *index, MPI_Status *status) {
+    
+    int i;
+
+    MPI_Request* requests = (MPI_Request*)malloc(count * sizeof(MPI_Request));
+    for(i = 0; i < count; ++i) {
+      requests[i] = array_of_requests[i]->mpiRequest;
+    }
+
+    int ret = MPI_Waitany(count,requests,index,status);
+
+    for(i = 0; i < count; ++i) {
+      array_of_requests[i]->mpiRequest = requests[i];
+    }
+
+    free(requests);
+
+    return ret;
 }
 
-int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
+int AMPI_Wait_b(AMPI_Request *request_p, MPI_Status * status) {
 #ifdef DEBUG
     int i=0;
 #endif
+    AMPI_GET_REQUEST(request, request_p);
+
     if(request->oc == AMPI_IS) {
-	return MPI_Irecv(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->mpiRequest);
+	return MPI_Irecv(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, &request->mpiRequest);
     }
     else {
 	if(request->oc == AMPI_IR) {
@@ -196,7 +225,7 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 	    }
 	    printf("\n");
 #endif
-	    return MPI_Isend(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, request->mpiRequest);
+	    return MPI_Isend(request->a, request->size, MPI_DOUBLE, request->dest, request->tag, request->comm, &request->mpiRequest);
 	} else { 
 	    printf("Error: OC invalid\n");
 	}
@@ -205,18 +234,19 @@ int AMPI_Wait_b(AMPI_Request *request, MPI_Status * status) {
 }
 
 int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
+
     int i = 0;
     int ierr;
     MPI_Request * reqs = (MPI_Request *) malloc(count * sizeof(MPI_Request*)); 
 
     for(i = 0 ; i < count ; i++) {
-	reqs[i] = *requests[i].mpiRequest;
+        reqs[i] = requests[i]->mpiRequest;
     }
 
     ierr = MPI_Waitall(count, reqs, status);
 
     for(i = 0 ; i < count ; i++) {
-	*requests[i].mpiRequest = reqs[i];
+        requests[i]->mpiRequest = reqs[i];
     }
     free(reqs);
     return ierr;
@@ -225,7 +255,7 @@ int AMPI_Waitall_f(int count, AMPI_Request *requests, MPI_Status *status) {
 int AMPI_Waitall_b(int count, AMPI_Request *requests, MPI_Status *status) {
     int i = 0;
     for(i = 0 ; i < count ; i++) {
-	AMPI_Wait_b(&requests[i], &requests[i].status);
+        AMPI_Wait_b(&requests[i], &requests[i]->status);
     }
     return MPI_SUCCESS;
 }
@@ -278,15 +308,20 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
     AMPI_Tupel *recvtupel = 0;
     int i = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    double* readbuf = sendbuf;
+    if(sendbuf == MPI_IN_PLACE) {
+      readbuf = recvbuf;
+    }
     if (op == MPI_PROD) {
         *ampi_reduce_stack = AMPI_stack_create(2 * count);
         recvbuf_tmp = (double *) malloc(sizeof(double) * count);
         for (i = 0; i < count; i = i + 1) {
-            AMPI_push(*ampi_reduce_stack, sendbuf[i]);
+            AMPI_push(*ampi_reduce_stack, readbuf[i]);
         }
-        MPI_Allreduce(sendbuf, recvbuf_tmp, count, datatype, op, comm);
-        for (i = 0; i < count; i = i + 1)
+        MPI_Allreduce(readbuf, recvbuf_tmp, count, datatype, op, comm);
+        for (i = 0; i < count; i = i + 1) {
             AMPI_push(*ampi_reduce_stack, recvbuf_tmp[i]);
+        }
         if (myid == root) {
             for (i = 0; i < count; i = i + 1) {
                 recvbuf[i] = recvbuf_tmp[i];
@@ -297,7 +332,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
     }
     if (op == MPI_SUM) {
         recvbuf_tmp = (double *) malloc(sizeof(double) * count);
-        MPI_Reduce(sendbuf, recvbuf_tmp, count, datatype, op, root, comm);
+        MPI_Reduce(readbuf, recvbuf_tmp, count, datatype, op, root, comm);
         if (myid == root) {
             for (i = 0; i < count; i = i + 1) {
                 recvbuf[i] = recvbuf_tmp[i];
@@ -311,7 +346,7 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
         sendtupel = (AMPI_Tupel *) malloc(sizeof(AMPI_Tupel) * count);
         recvtupel = (AMPI_Tupel *) malloc(sizeof(AMPI_Tupel) * count);
         for (i = 0; i < count; i = i + 1) {
-            sendtupel[i].v = sendbuf[i];
+            sendtupel[i].v = readbuf[i];
             sendtupel[i].j = myid;
         }
         if (op == MPI_MAX)
@@ -335,115 +370,121 @@ int AMPI_Reduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype data
 }
 
 int AMPI_Reduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, ampi_stack* ampi_reduce_stack) {
-    int i=0;
-    double *s = 0;
-    double *s_d = 0;
-    double *r = 0;
-    int idx=0;
-    int myid=0;
-    if(op == MPI_PROD) {
-        AMPI_stack_reset(ampi_reduce_stack);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	    s =(double*) malloc(sizeof(double)*count);
-	    s_d =(double*) malloc(sizeof(double)*count);
-	    r =(double*) malloc(sizeof(double)*count);
-	    MPI_Bcast(recvbuf, count, datatype, root, comm);
-	    for(i=count-1 ; i>=0 ; i=i-1) {
-		r[i] = AMPI_pop(ampi_reduce_stack);
-	    }
-	    for(i=count-1 ; i>=0 ; i=i-1) {
-		s[i] = AMPI_pop(ampi_reduce_stack);
-	    }
-	    for(i=0; i<count; i=i+1) {
-		s_d[i] = recvbuf[i];
-	    }
-	    for(i=0 ; i<count ; i=i+1) {
-		if(r[i]*s_d[i] == 0.0){
-		    sendbuf[i]=0;
-		    printf("--------------------------------------\n");
-		    printf("Arithmetic Exeption in adjoint reduce!\n");
-		    printf("Result set to 0. Hoping for the best.\n");
-		    printf("--------------------------------------\n");
-		    return 1;
-		}
-		else {
-		    sendbuf[i] = (r[i]/s[i])*s_d[i];
-		}
-	    }
-	    free(s);
-	    free(s_d);
-	    free(r);
-	    return MPI_SUCCESS;
+  int i=0;
+  double *s = 0;
+  double *s_d = 0;
+  double *r = 0;
+  int idx=0;
+  int myid=0;
+  if(op == MPI_PROD) {
+    AMPI_stack_reset(ampi_reduce_stack);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    s =(double*) malloc(sizeof(double)*count);
+    s_d =(double*) malloc(sizeof(double)*count);
+    r =(double*) malloc(sizeof(double)*count);
+    MPI_Bcast(recvbuf, count, datatype, root, comm);
+    for(i=count-1 ; i>=0 ; i=i-1) {
+      r[i] = AMPI_pop(ampi_reduce_stack);
     }
-    if(op == MPI_SUM) {
-	s_d = (double*)malloc(sizeof(double)*count);
-	MPI_Bcast(recvbuf, count, datatype, root, comm);
-	for(i=0; i<count; i=i+1)
-	    s_d[i] = recvbuf[i];
-	for(i=0 ; i<count ; i=i+1) {
-	    sendbuf[i] = s_d[i];
-	}
-	free(s_d);
-	return MPI_SUCCESS;
+    for(i=count-1 ; i>=0 ; i=i-1) {
+      s[i] = AMPI_pop(ampi_reduce_stack);
     }
-    if(op == MPI_MIN || op == MPI_MAX) {
-        AMPI_stack_reset(ampi_reduce_stack);
-	MPI_Bcast(recvbuf, count, datatype, root, comm);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	for(i=count-1;i>=0;i--) {
-	    idx=(int)AMPI_pop(ampi_reduce_stack);
-	    if(myid!=idx)
-		sendbuf[i]=0;
-	    else {
-		sendbuf[i]=recvbuf[i];
-	    }
-	}
-	return MPI_SUCCESS;
+    for(i=0; i<count; i=i+1) {
+      s_d[i] = recvbuf[i];
     }
-    return -1;
+    for(i=0 ; i<count ; i=i+1) {
+      if(r[i]*s_d[i] == 0.0){
+        sendbuf[i]=0;
+        printf("--------------------------------------\n");
+        printf("Arithmetic Exeption in adjoint reduce!\n");
+        printf("Result set to 0. Hoping for the best.\n");
+        printf("--------------------------------------\n");
+        return 1;
+      }
+      else {
+        sendbuf[i] = (r[i]/s[i])*s_d[i];
+      }
+    }
+    free(s);
+    free(s_d);
+    free(r);
+    return MPI_SUCCESS;
+  }
+  if(op == MPI_SUM) {
+    s_d = (double*)malloc(sizeof(double)*count);
+    MPI_Bcast(recvbuf, count, datatype, root, comm);
+    for(i=0; i<count; i=i+1)
+      s_d[i] = recvbuf[i];
+    for(i=0 ; i<count ; i=i+1) {
+      sendbuf[i] = s_d[i];
+    }
+    free(s_d);
+    return MPI_SUCCESS;
+  }
+  if(op == MPI_MIN || op == MPI_MAX) {
+    AMPI_stack_reset(ampi_reduce_stack);
+    MPI_Bcast(recvbuf, count, datatype, root, comm);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    for(i=count-1;i>=0;i--) {
+      idx=(int)AMPI_pop(ampi_reduce_stack);
+      if(myid!=idx)
+        sendbuf[i]=0;
+      else {
+        sendbuf[i]=recvbuf[i];
+      }
+    }
+    return MPI_SUCCESS;
+  }
+  return -1;
 }
 
 int AMPI_Allreduce_f(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack** ampi_reduce_stack) {
-    int i=0;
-    int myid=0;
-    AMPI_Tupel *sendtupel=0;
-    AMPI_Tupel *recvtupel=0;
-    if(op == MPI_PROD || op == MPI_SUM) {
-        *ampi_reduce_stack = AMPI_stack_create(count * 2);
-	for(i=0; i<count ; i=i+1) {
-	    AMPI_push(*ampi_reduce_stack,sendbuf[i]);
-	}
-
-	MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
-	for(i=0; i<count; i=i+1)
-	    AMPI_push(*ampi_reduce_stack,recvbuf[i]);
-	return MPI_SUCCESS;
+  int i=0;
+  int myid=0;
+  AMPI_Tupel *sendtupel=0;
+  AMPI_Tupel *recvtupel=0;
+  double* readbuf = sendbuf;
+  if(sendbuf == MPI_IN_PLACE) {
+    readbuf = recvbuf;
+  }
+  if(op == MPI_PROD || op == MPI_SUM) {
+    *ampi_reduce_stack = AMPI_stack_create(count * 2);
+    for(i=0; i<count ; i=i+1) {
+      AMPI_push(*ampi_reduce_stack,readbuf[i]);
     }
-    if(op == MPI_MIN || op == MPI_MAX) {
-	sendtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
-	recvtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
-	MPI_Comm_rank(MPI_COMM_WORLD, &myid);
-	for(i=0; i<count; i=i+1) {
-	    sendtupel[i].v=sendbuf[i];
-	    sendtupel[i].j=myid;
-	}
-	if(op == MPI_MAX)
-	    MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MAXLOC, comm);
-	else
-	    MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MINLOC, comm);
+
+    MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
+    for(i=0; i<count; i=i+1) {
+      AMPI_push(*ampi_reduce_stack,recvbuf[i]);
+    }
+    return MPI_SUCCESS;
+  }
+  if(op == MPI_MIN || op == MPI_MAX) {
+    sendtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
+    recvtupel=(AMPI_Tupel*) malloc(sizeof(AMPI_Tupel)*count);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+    for(i=0; i<count; i=i+1) {
+      sendtupel[i].v=readbuf[i];
+      sendtupel[i].j=myid;
+    }
+    if(op == MPI_MAX) {
+      MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MAXLOC, comm);
+    } else {
+      MPI_Allreduce(sendtupel, recvtupel, count, MPI_DOUBLE_INT, MPI_MINLOC, comm);
+    }
 
     *ampi_reduce_stack = AMPI_stack_create(count);
-	for(i=0; i<count; i=i+1) {
-	    AMPI_push(*ampi_reduce_stack,(double) recvtupel[i].j);
-	}
-	for(i=0; i<count; i=i+1) {
-	    recvbuf[i]=recvtupel[i].v;
-	}
-	free(sendtupel);
-	free(recvtupel);
-	return MPI_SUCCESS;
+    for(i=0; i<count; i=i+1) {
+      AMPI_push(*ampi_reduce_stack,(double) recvtupel[i].j);
     }
-    return -1;
+    for(i=0; i<count; i=i+1) {
+      recvbuf[i]=recvtupel[i].v;
+    }
+    free(sendtupel);
+    free(recvtupel);
+    return MPI_SUCCESS;
+  }
+  return -1;
 }
 
 int AMPI_Allreduce_b(double *sendbuf, double *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, ampi_stack* ampi_reduce_stack) {
