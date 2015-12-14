@@ -88,6 +88,19 @@ void ampi_create_dummies(void *buf, int *size) {
     }
 }
 
+void ampi_create_dummies_displ(void *buf, int* displ, int *size) {
+  if (NULL != AD_MODE::global_tape && AD_MODE::global_tape->is_active()){
+
+    AD_MODE::type *values=static_cast<AD_MODE::type*>(buf);
+
+    for(int i=0;i<*size;++i) {
+      AD_MODE::type& dummy=values[*displ + i];
+      dummy=0;
+      AD_MODE::global_tape->register_variable(dummy);
+    }
+  }
+}
+
 int ampi_is_tape_active () {
     if (NULL != AD_MODE::global_tape) {
 #ifdef DCO_ALLOW_TAPE_SWITCH_OFF
