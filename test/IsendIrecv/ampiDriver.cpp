@@ -15,7 +15,7 @@ void comp(active *x, active &y, int &n) {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   active *buf=new active[n];
   y=0;
-  MPI_Request request[2];
+  AMPI_Request request[2];
   if(rank==0) {
     for(int i=0;i<n;i++) x[i]=x[i]*x[i];
     AMPI_Irecv(buf,n,MPI_DOUBLE,1,0,MPI_COMM_WORLD,&request[0]);
