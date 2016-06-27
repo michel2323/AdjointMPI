@@ -209,6 +209,30 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
 
 /**
+ * @brief Active allgather.
+ *
+ * @param sendbuf Pointer to active send buffer
+ * @param recvbuf Pointer to active receive buffer
+ */
+int AMPI_Allgather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, MPI_Comm comm);
+
+/**
+ * @brief Active gatherv.
+ *
+ * @param sendbuf Pointer to active send buffer
+ * @param recvbuf Pointer to active receive buffer
+ */
+int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int *recvcnts, int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm);
+
+/**
+ * @brief Active allgatherv.
+ *
+ * @param sendbuf Pointer to active send buffer
+ * @param recvbuf Pointer to active receive buffer
+ */
+int AMPI_Allgatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int *recvcnts, int *displs, MPI_Datatype recvtype, MPI_Comm comm);
+
+/**
  * @brief Active receive init. The active AMPI_Requests
  * are registered. MPI_Recv_init is _not_ executed in AMPI. See AMPI_Start.
  *
