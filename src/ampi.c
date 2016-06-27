@@ -193,13 +193,20 @@ int AMPI_Waitany_f(int count, AMPI_Request array_of_requests[], int *index, MPI_
 
     MPI_Request* requests = (MPI_Request*)malloc(count * sizeof(MPI_Request));
     for(i = 0; i < count; ++i) {
-      requests[i] = array_of_requests[i]->mpiRequest;
+      if(array_of_requests[i] == AMPI_REQUEST_NULL) {
+        requests[i] = MPI_REQUEST_NULL;
+      }
+      else {
+        requests[i] = array_of_requests[i]->mpiRequest;
+      }
     }
 
     int ret = MPI_Waitany(count,requests,index,status);
 
     for(i = 0; i < count; ++i) {
-      array_of_requests[i]->mpiRequest = requests[i];
+      if(requests[i] != MPI_REQUEST_NULL) {
+        array_of_requests[i]->mpiRequest = requests[i];
+      }
     }
 
     free(requests);
