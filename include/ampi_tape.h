@@ -201,6 +201,14 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
 
 /**
+ * @brief Active scatterv.
+ *
+ * @param sendbuf Pointer to active send buffer
+ * @param recvbuf Pointer to active receive buffer
+ */
+int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcnt, MPI_Datatype recvtype, int root, MPI_Comm comm);
+
+/**
  * @brief Active gather. 
  *
  * @param sendbuf Pointer to active send buffer
