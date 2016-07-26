@@ -18,7 +18,7 @@
  * Sets the active MPI type. If all buffers of type MPI_DOUBLE should be
  * communicated actively, set this to MPI_DOUBLE
  */
-#define AMPI_DOUBLE MPI_DOUBLE
+#define AMPI_DOUBLE adoubleType
 
 /**
  * \def AMPI_CHUNK_SIZE
@@ -74,6 +74,8 @@
 #include <ampi.h>
 
 /*int ampi_vac=0;*/
+
+extern MPI_Datatype adoubleType;
 
 /** 
  * An element of the AMPI tape. 
