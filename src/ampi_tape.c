@@ -69,7 +69,7 @@ int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
       ampi_tape->tag = tag;
     }
 
-    int exitCode = AMPI_Send_f(primalValues, count, datatype, dest, tag, comm);
+    int exitCode = AMPI_Send_f(primalValues, count, MPI_DOUBLE, dest, tag, comm);
 
     free(primalValues);
 
@@ -114,7 +114,7 @@ int AMPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       ampi_tape->tag = tag;
     }
 
-    int exitCode = AMPI_Bsend_f(primalValues, count+1, datatype, dest, tag, comm);
+    int exitCode = AMPI_Bsend_f(primalValues, count+1, MPI_DOUBLE, dest, tag, comm);
 
     free(primalValues);
 
@@ -135,7 +135,7 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
     /* set to 0. if this is a 1, the received message was a Bsend */
     primalValues[count]=0;
 
-    int exitCode = AMPI_Recv_f(primalValues, count+1, datatype, dest, tag, comm, status);
+    int exitCode = AMPI_Recv_f(primalValues, count+1, MPI_DOUBLE, dest, tag, comm, status);
     /*if 1, it is a BSEND on the other end*/
     if (ampi_is_tape_active()){
       ampi_tape_entry* ampi_tape = ampi_create_tape(count+1);
@@ -215,7 +215,7 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 
     /*point current primalRequest index to this tape entry*/
     mpi_request->v = primalValues;
-    temp = AMPI_Isend_f(primalValues, count, datatype, dest, tag, comm, mpi_request_p);
+    temp = AMPI_Isend_f(primalValues, count, MPI_DOUBLE, dest, tag, comm, mpi_request_p);
 
     return temp;
 }
@@ -260,7 +260,7 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
       mpi_request->va = ampi_tape;
     }
 
-    int temp = AMPI_Irecv_f(tmp, count+1, datatype, dest, tag, comm, mpi_request_p);
+    int temp = AMPI_Irecv_f(tmp, count+1, MPI_DOUBLE, dest, tag, comm, mpi_request_p);
 
     return temp;
 }
@@ -426,7 +426,7 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
       ampi_create_tape_entry((void*)ampi_tape);
     }
 
-    int temp = AMPI_Bcast_f(primalValues, count, datatype, root, comm);
+    int temp = AMPI_Bcast_f(primalValues, count, MPI_DOUBLE, root, comm);
 
     if(rank!=root) {
       for(i=0;i<count;i=i+1) {
@@ -514,7 +514,7 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
       }
       ampi_tape->comm = comm;
 
-      AMPI_Reduce_f(tmp_send, tmp_recv, count, datatype, op, root, comm, &ampi_tape->stack);
+      AMPI_Reduce_f(tmp_send, tmp_recv, count, MPI_DOUBLE, op, root, comm, &ampi_tape->stack);
 
       /*recvbuf entry*/
 
@@ -608,7 +608,7 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
       ampi_tape->arg[2] = AMPI_REDUCE_MAX;
     }
 
-    ierr=AMPI_Allreduce_f(tmp_send, tmp_recv, count, datatype, op, comm, &ampi_tape->stack);
+    ierr=AMPI_Allreduce_f(tmp_send, tmp_recv, count, MPI_DOUBLE, op, comm, &ampi_tape->stack);
 
     for(i=0 ; i<count ; i=i+1) {
       ampi_get_idx(recvbuf, &i, &ampi_tape->idx[count + i]);
@@ -687,7 +687,7 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
     }
   }
 
-  AMPI_Scatter_f(tmp_send, sendcnt, sendtype, tmp_recv, recvcnt, recvtype, root, comm);
+  AMPI_Scatter_f(tmp_send, sendcnt, MPI_DOUBLE, tmp_recv, recvcnt, MPI_DOUBLE, root, comm);
 
   for(i=0 ; i<recvcnt ; i=i+1) {
     ampi_set_val(recvbuf, &i, &tmp_recv[i]);
@@ -773,7 +773,7 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
     }
   }
 
-  MPI_Scatterv(tmp_send, sendcnts, tmp_disp, sendtype, tmp_recv, recvcnt, recvtype, root, comm);
+  MPI_Scatterv(tmp_send, sendcnts, tmp_disp, MPI_DOUBLE, tmp_recv, recvcnt, MPI_DOUBLE, root, comm);
 
   for(i=0 ; i<recvcnt ; i=i+1) {
     ampi_set_val(recvbuf, &i, &tmp_recv[i]);
@@ -850,7 +850,7 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
     }
   }
 
-  AMPI_Gather_f(tmp_send, sendcnt, sendtype, tmp_recv, recvcnt, recvtype, root, comm);
+  AMPI_Gather_f(tmp_send, sendcnt, MPI_DOUBLE, tmp_recv, recvcnt, MPI_DOUBLE, root, comm);
 
   if(rank == root) {
     for(i=0 ; i<recvcnt*size ; i=i+1) {
@@ -945,7 +945,7 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
     }
   }
 
-  MPI_Gatherv(tmp_send, sendcnt, sendtype, tmp_recv, recvcnts, tmp_disp, recvtype, root, comm);
+  MPI_Gatherv(tmp_send, sendcnt, MPI_DOUBLE, tmp_recv, recvcnts, tmp_disp, MPI_DOUBLE, root, comm);
 
   if(rank == root) {
     int j;
@@ -1018,7 +1018,7 @@ int AMPI_Allgather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recv
     }
   }
 
-  MPI_Allgather(tmp_send, sendcnt, sendtype, tmp_recv, recvcnt, recvtype, comm);
+  MPI_Allgather(tmp_send, sendcnt, MPI_DOUBLE, tmp_recv, recvcnt, MPI_DOUBLE, comm);
 
   for(i=0 ; i<recvcnt*size ; i=i+1) {
     ampi_set_val(recvbuf, &i, &tmp_recv[i]);
@@ -1102,7 +1102,7 @@ int AMPI_Allgatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *rec
     }
   }
 
-  MPI_Allgatherv(tmp_send, sendcnt, sendtype, tmp_recv, recvcnts, tmp_disp, recvtype, comm);
+  MPI_Allgatherv(tmp_send, sendcnt, MPI_DOUBLE, tmp_recv, recvcnts, tmp_disp, MPI_DOUBLE, comm);
 
   int j;
   int idxPos = 0;
@@ -1215,7 +1215,7 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
       }
     }
 
-    int temp=AMPI_Sendrecv_replace_f(tmp, count, datatype, dest, sendtag, source, recvtag, comm, status);
+    int temp=AMPI_Sendrecv_replace_f(tmp, count, MPI_DOUBLE, dest, sendtag, source, recvtag, comm, status);
 
     for(i=0;i<count;i=i+1) {
         ampi_set_val(buf, &i, &tmp[i]);
@@ -1268,7 +1268,7 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
       }
     }
 
-    int temp=AMPI_Sendrecv_f(sendtmp, sendcount, sendtype, dest, sendtag, recvtmp,recvcount,recvtype,source,recvtag,comm,status);
+    int temp=AMPI_Sendrecv_f(sendtmp, sendcount, MPI_DOUBLE, dest, sendtag, recvtmp,recvcount,MPI_DOUBLE,source,recvtag,comm,status);
 
     for(i=0;i<recvcount;i=i+1) {
       ampi_set_val(recvbuf, &i, &recvtmp[i]);

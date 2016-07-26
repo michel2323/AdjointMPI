@@ -9,9 +9,17 @@
 
 /* Non communication routines (Init, Finalize...)*/
 
+MPI_Datatype adoubleType;
+
 int AMPI_Init_f(int *argc, char ***argv) {
     int ierr;
     ierr=MPI_Init(argc, argv);
+
+    int blockLength[2] = {1,1};
+    MPI_Aint displacements[2] = {0, sizeof(double)};
+    MPI_Datatype types[2] = {MPI_DOUBLE, MPI_INT};
+    MPI_Type_create_struct(2, blockLength, displacements, types, &adoubleType);
+    MPI_Type_commit(&adoubleType);
     return ierr;
 }
 
