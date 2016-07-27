@@ -15,10 +15,15 @@
  */
 
 /** \def AMPI_DOUBLE
+ * Regular definition of MPI_DOUBLE in the AMPI namespace.
+ */
+#define AMPI_DOUBLE MPI_DOUBLE
+
+/** \def AMPI_ADOUBLE
  * Sets the active MPI type. If all buffers of type MPI_DOUBLE should be
  * communicated actively, set this to MPI_DOUBLE
  */
-#define AMPI_DOUBLE adoubleType
+#define AMPI_ADOUBLE adoubleType
 
 /**
  * \def AMPI_CHUNK_SIZE
