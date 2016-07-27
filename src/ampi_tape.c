@@ -38,7 +38,7 @@ int AMPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Send(buf, count, datatype, dest, tag, comm);
     }
     int i=0;
@@ -80,7 +80,7 @@ int AMPI_Bsend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Bsend(buf, count, datatype, dest, tag, comm);
     }
     int i=0;
@@ -125,7 +125,7 @@ int AMPI_Recv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MP
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Recv(buf, count, datatype, dest, tag, comm, status);
     }
 
@@ -179,7 +179,7 @@ int AMPI_Isend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 
     AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
 
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Isend(buf, count, datatype, dest, tag, comm, &mpi_request->mpiRequest);
     }
     int i=0, temp;
@@ -227,7 +227,7 @@ int AMPI_Irecv(void *buf, int count, MPI_Datatype datatype, int dest, int tag, M
 
     AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
 
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Irecv(buf, count, datatype, dest, tag, comm, &mpi_request->mpiRequest);
     }
     int i=0;    
@@ -382,7 +382,7 @@ int AMPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm c
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Bcast(buf, count, datatype, root, comm);
     }
     int rank=0;
@@ -443,7 +443,7 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-    if(datatype!=AMPI_DOUBLE) {
+    if(datatype!=AMPI_ADOUBLE) {
       return MPI_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm);
     }
     int i=0;
@@ -549,7 +549,7 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #ifdef AMPI_COUNT_COMMS
   ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(datatype!=AMPI_DOUBLE) {
+  if(datatype!=AMPI_ADOUBLE) {
     return MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm);
   }
 
@@ -635,7 +635,7 @@ int AMPI_Scatter(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+  if(sendtype !=AMPI_ADOUBLE || recvtype != AMPI_ADOUBLE) {
     return MPI_Scatter(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
   }
   int i=0;
@@ -705,7 +705,7 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+  if(sendtype !=AMPI_ADOUBLE || recvtype != AMPI_ADOUBLE) {
     return MPI_Scatterv(sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm);
   }
   int i=0;
@@ -792,7 +792,7 @@ int AMPI_Gather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbuf
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+  if(sendtype !=AMPI_ADOUBLE || recvtype != AMPI_ADOUBLE) {
     return MPI_Gather(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm);
   }
   int i=0;
@@ -869,7 +869,7 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+  if(sendtype !=AMPI_ADOUBLE || recvtype != AMPI_ADOUBLE) {
     return MPI_Gatherv(sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm);
   }
 
@@ -972,7 +972,7 @@ int AMPI_Allgather(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recv
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+  if(sendtype !=AMPI_ADOUBLE || recvtype != AMPI_ADOUBLE) {
     return MPI_Allgather(sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, comm);
   }
   int i=0;
@@ -1033,7 +1033,7 @@ int AMPI_Allgatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *rec
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(sendtype !=AMPI_DOUBLE || recvtype != AMPI_DOUBLE) {
+  if(sendtype !=AMPI_ADOUBLE || recvtype != AMPI_ADOUBLE) {
     return MPI_Allgatherv(sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, comm);
   }
 
@@ -1125,7 +1125,7 @@ int AMPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int 
 
   AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
 
-  if(datatype!=AMPI_DOUBLE) {
+  if(datatype!=AMPI_ADOUBLE) {
     return MPI_Recv_init(buf, count, datatype, source, tag, comm, &mpi_request->mpiRequest);
   }
     mpi_request->buf = buf;
@@ -1152,7 +1152,7 @@ int AMPI_Send_init(void *buf, int count, MPI_Datatype datatype, int dest, int ta
 
   AMPI_CREATE_REQUEST(mpi_request, mpi_request_p);
 
-  if(datatype!=AMPI_DOUBLE) {
+  if(datatype!=AMPI_ADOUBLE) {
     return MPI_Send_init(buf, count, datatype, dest, tag, comm, &mpi_request->mpiRequest);
   }
     mpi_request->buf = buf;
@@ -1175,7 +1175,7 @@ int AMPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(datatype!=AMPI_DOUBLE) {
+  if(datatype!=AMPI_ADOUBLE) {
     return MPI_Sendrecv_replace(buf, count, datatype, dest, sendtag, source, recvtag, comm, status);
   }
     int i=0;
@@ -1228,7 +1228,7 @@ int AMPI_Sendrecv(void *sendbuf, int sendcount, MPI_Datatype sendtype, int dest,
 #ifdef AMPI_COUNT_COMMS
     ampi_comm_count=ampi_comm_count+1;
 #endif
-  if(recvtype!=AMPI_DOUBLE) {
+  if(recvtype!=AMPI_ADOUBLE) {
     return MPI_Sendrecv(sendbuf, sendcount, sendtype, dest, sendtag, recvbuf,recvcount,recvtype,source,recvtag,comm,status);
   }
 
