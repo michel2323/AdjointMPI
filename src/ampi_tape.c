@@ -525,7 +525,7 @@ int AMPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
       }
 
     }else{
-       MPI_Reduce(tmp_send, tmp_recv, count, datatype, op, root, comm);
+       MPI_Reduce(tmp_send, tmp_recv, count, MPI_DOUBLE, op, root, comm);
     }
 
 
@@ -615,7 +615,7 @@ int AMPI_Allreduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
     }
 
   }else{
-    ierr = MPI_Allreduce(tmp_send, tmp_recv, count, datatype, op, comm);
+    ierr = MPI_Allreduce(tmp_send, tmp_recv, count, MPI_DOUBLE, op, comm);
   }
 
 
@@ -879,7 +879,7 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
   int total_size=0;
   int bufferSize=0;
   MPI_Comm_size(comm,&size);
-  MPI_Comm_size(comm,&rank);
+  MPI_Comm_rank(comm,&rank);
 
   /* Determine and allocate maximum size of recvbuf */
 
@@ -1043,7 +1043,7 @@ int AMPI_Allgatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *rec
   int total_size=0;
   int bufferSize=0;
   MPI_Comm_size(comm,&size);
-  MPI_Comm_size(comm,&rank);
+  MPI_Comm_rank(comm,&rank);
 
   /* Determine and allocate maximum size of recvbuf */
 
