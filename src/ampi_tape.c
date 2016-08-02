@@ -744,7 +744,7 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
   if (ampi_is_tape_active()){
 
     ampi_tape_entry* ampi_tape = ampi_create_tape(bufferSize);
-    ampi_tape->arg=(int*) malloc(sizeof(int)*3 + 2*size);
+    ampi_tape->arg=(int*) malloc(sizeof(int)*(3 + 2*size));
     ampi_tape->comm = comm;
     ampi_create_dummies(recvbuf, &recvcnt);
 
@@ -757,9 +757,11 @@ int AMPI_Scatterv(void *sendbuf, int *sendcnts, int *displs, MPI_Datatype sendty
     }
 
     ampi_tape->oc = SCATTERV;
-    for(i=0 ; i<size; i=i+1) {
-      ampi_tape->arg[3 + i] = sendcnts[i];
-      ampi_tape->arg[3 + size + i] = tmp_disp[i];
+    if(rank == root) {
+      for(i=0 ; i<size; i=i+1) {
+        ampi_tape->arg[3 + i] = sendcnts[i];
+        ampi_tape->arg[3 + size + i] = tmp_disp[i];
+      }
     }
     ampi_tape->arg[2] = sendSize;
     ampi_tape->arg[1] = recvcnt;
@@ -920,9 +922,11 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
       ampi_get_idx(sendbuf, &i, &ampi_tape->idx[i]);
     }
     ampi_tape->oc = GATHERV;
-    for(i=0 ; i<size; i=i+1) {
-      ampi_tape->arg[3 + i] = recvcnts[i];
-      ampi_tape->arg[3 + size + i] = tmp_disp[i];
+    if(rank == root) {
+      for(i=0 ; i<size; i=i+1) {
+        ampi_tape->arg[3 + i] = recvcnts[i];
+        ampi_tape->arg[3 + size + i] = tmp_disp[i];
+      }
     }
     ampi_tape->arg[2] = total_size;
     ampi_tape->arg[1] = sendcnt;
