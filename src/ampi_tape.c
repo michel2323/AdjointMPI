@@ -932,6 +932,7 @@ int AMPI_Gatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *recvbu
     ampi_tape->arg[1] = sendcnt;
     ampi_tape->arg[0] = root;
     ampi_tape->comm = comm;
+    ampi_create_tape_entry((void*)ampi_tape);;
 
 
     /*recvbuf entry*/
@@ -1091,6 +1092,7 @@ int AMPI_Allgatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *rec
     }
     ampi_tape->arg[0] = total_size;
     ampi_tape->comm = comm;
+    ampi_create_tape_entry((void*)ampi_tape);;
 
 
     /*recvbuf entry*/
@@ -1114,6 +1116,7 @@ int AMPI_Allgatherv(void *sendbuf, int sendcnt, MPI_Datatype sendtype, void *rec
     for( j=0; j < recvcnts[i]; j=j+1) {
       int pos = displs[i] + j;
       ampi_set_val(recvbuf, &pos, &tmp_recv[idxPos]);
+      idxPos=idxPos+1;
     }
   }
   free(tmp_send);
