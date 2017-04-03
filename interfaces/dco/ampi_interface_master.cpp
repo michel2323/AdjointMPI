@@ -21,12 +21,7 @@ void ampi_set_val(void* buf, int *i, double *v) {
 
 void ampi_get_idx(void *buf, int *i, INT64 *idx) {
     type &var = static_cast<type*>(buf)[*i];
-    if(!var._data()._is_registered()) {
-        *idx=0;
-    }
-    else {
-        *idx = dco::tape_index(var);
-    }
+    *idx = dco::tape_index(var);
 }
 
 void ampi_get_adj(INT64 *idx, double *x) {
@@ -41,7 +36,7 @@ void ampi_set_adj(INT64 *idx, double *x) {
 
 struct AMPI_data : AD_MODE::callback_object_t::callback_object_base  {
   void* handle;
-        
+
   AMPI_data(){}
   AMPI_data(const AMPI_data *other) {
     handle=other->handle;
